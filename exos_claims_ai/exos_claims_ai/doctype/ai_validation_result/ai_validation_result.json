@@ -1,0 +1,43 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-08 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "claim_reference",
+  "validation_status",
+  "confidence_score",
+  "coverage_decision",
+  "missing_documents",
+  "duplicate_detection_result",
+  "ai_summary",
+  "ai_recommendation",
+  "evidence_references",
+  "raw_payload"
+ ],
+ "fields": [
+  {"fieldname": "claim_reference", "fieldtype": "Link", "label": "Claim Reference", "options": "Insurance Claim", "reqd": 1},
+  {"fieldname": "validation_status", "fieldtype": "Select", "label": "Validation Status", "options": "APPROVED\nREJECTED\nREVIEW"},
+  {"fieldname": "confidence_score", "fieldtype": "Percent", "label": "Confidence Score"},
+  {"fieldname": "coverage_decision", "fieldtype": "Check", "label": "Coverage Decision"},
+  {"fieldname": "missing_documents", "fieldtype": "Small Text", "label": "Missing Documents"},
+  {"fieldname": "duplicate_detection_result", "fieldtype": "Data", "label": "Duplicate Detection Result"},
+  {"fieldname": "ai_summary", "fieldtype": "Long Text", "label": "AI Summary"},
+  {"fieldname": "ai_recommendation", "fieldtype": "Small Text", "label": "AI Recommendation"},
+  {"fieldname": "evidence_references", "fieldtype": "Table", "label": "Evidence References", "options": "Claim Evidence Reference"},
+  {"fieldname": "raw_payload", "fieldtype": "Code", "label": "Raw Payload", "options": "JSON"}
+ ],
+ "module": "EXOS Claims AI",
+ "name": "AI Validation Result",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "print": 1, "email": 1, "share": 1},
+  {"role": "Claims Officer", "read": 1, "write": 1, "create": 1, "print": 1, "email": 1},
+  {"role": "Claims Manager", "read": 1, "write": 1, "print": 1, "email": 1},
+  {"role": "Finance Manager", "read": 1, "print": 1, "email": 1}
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
+

@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:CLM-.#####",
+ "creation": "2026-07-08 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "claim_number",
+  "policy_number",
+  "claimant_name",
+  "claim_type",
+  "incident_date",
+  "claim_amount",
+  "claim_description",
+  "status",
+ "claim_form",
+ "invoice",
+ "medical_report",
+ "supporting_documents",
+  "approval_status",
+  "ai_summary"
+ ],
+ "fields": [
+  {"fieldname": "claim_number", "fieldtype": "Data", "label": "Claim Number", "reqd": 1, "unique": 1},
+  {"fieldname": "policy_number", "fieldtype": "Link", "label": "Policy Number", "options": "Insurance Policy", "reqd": 1},
+  {"fieldname": "claimant_name", "fieldtype": "Data", "label": "Claimant Name", "reqd": 1},
+  {"fieldname": "claim_type", "fieldtype": "Select", "label": "Claim Type", "options": "Medical\nMotor\nProperty\nTravel\nLife"},
+  {"fieldname": "incident_date", "fieldtype": "Date", "label": "Incident Date", "reqd": 1},
+  {"fieldname": "claim_amount", "fieldtype": "Currency", "label": "Claim Amount", "reqd": 1},
+  {"fieldname": "claim_description", "fieldtype": "Long Text", "label": "Claim Description"},
+  {"default": "Draft", "fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nPending AI Validation\nAI Validated\nPending Approval\nApproved\nRejected"},
+  {"fieldname": "claim_form", "fieldtype": "Attach", "label": "Claim Form"},
+  {"fieldname": "invoice", "fieldtype": "Attach", "label": "Invoice"},
+  {"fieldname": "medical_report", "fieldtype": "Attach", "label": "Medical Report"},
+  {"fieldname": "supporting_documents", "fieldtype": "Attach", "label": "Supporting Documents"},
+  {"fieldname": "approval_status", "fieldtype": "Data", "label": "Approval Status", "read_only": 1},
+  {"fieldname": "ai_summary", "fieldtype": "Small Text", "label": "AI Summary", "read_only": 1}
+ ],
+ "module": "EXOS Claims AI",
+ "name": "Insurance Claim",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "print": 1, "email": 1, "share": 1},
+  {"role": "Claims Officer", "read": 1, "write": 1, "create": 1, "print": 1, "email": 1},
+  {"role": "Claims Manager", "read": 1, "write": 1, "print": 1, "email": 1},
+  {"role": "Finance Manager", "read": 1, "print": 1, "email": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
+

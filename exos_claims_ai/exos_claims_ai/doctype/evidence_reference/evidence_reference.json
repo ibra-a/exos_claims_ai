@@ -1,0 +1,20 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-08 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": ["document_name", "page_no", "extracted_text", "clause_reference"],
+ "fields": [
+  {"fieldname": "document_name", "fieldtype": "Data", "label": "Document", "reqd": 1},
+  {"fieldname": "page_no", "fieldtype": "Int", "label": "Page"},
+  {"fieldname": "extracted_text", "fieldtype": "Small Text", "label": "Extracted Text"},
+  {"fieldname": "clause_reference", "fieldtype": "Data", "label": "Clause Reference"}
+ ],
+ "istable": 1,
+ "module": "EXOS Claims AI",
+ "name": "Evidence Reference",
+ "track_changes": 0
+}
+

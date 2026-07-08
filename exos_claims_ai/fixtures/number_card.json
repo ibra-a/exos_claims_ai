@@ -1,0 +1,35 @@
+[
+  {
+    "doctype": "Number Card",
+    "label": "Claims Pending Validation",
+    "document_type": "Insurance Claim",
+    "function": "Count",
+    "filters_json": "[[\"Insurance Claim\",\"status\",\"=\",\"Pending AI Validation\"]]",
+    "is_public": 1
+  },
+  {
+    "doctype": "Number Card",
+    "label": "Claims Approved",
+    "document_type": "Insurance Claim",
+    "function": "Count",
+    "filters_json": "[[\"Insurance Claim\",\"status\",\"=\",\"Approved\"]]",
+    "is_public": 1
+  },
+  {
+    "doctype": "Number Card",
+    "label": "Claims Rejected",
+    "document_type": "Insurance Claim",
+    "function": "Count",
+    "filters_json": "[[\"Insurance Claim\",\"status\",\"=\",\"Rejected\"]]",
+    "is_public": 1
+  },
+  {
+    "doctype": "Number Card",
+    "label": "Claims Waiting Approval",
+    "document_type": "Insurance Claim",
+    "function": "Count",
+    "filters_json": "[[\"Insurance Claim\",\"status\",\"=\",\"Pending Approval\"]]",
+    "is_public": 1
+  }
+]
+

@@ -1,0 +1,21 @@
+[project]
+name = "exos_claims_ai"
+authors = [
+    { name = "EXOS", email = "info@exoscorp.com"}
+]
+description = "EXOS ERPNext AI-powered Claims Validation Platform"
+requires-python = ">=3.10"
+readme = "README.md"
+dynamic = ["version"]
+dependencies = [
+    "frappe>=15.0.0,<16.0.0",
+]
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.bench.dev-dependencies]
+
+[tool.flit.module]
+name = "exos_claims_ai"

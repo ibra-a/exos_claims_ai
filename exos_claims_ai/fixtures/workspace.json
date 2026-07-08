@@ -1,0 +1,13 @@
+[
+  {
+    "doctype": "Workspace",
+    "name": "EXOS Claims Control Center",
+    "title": "EXOS Claims Control Center",
+    "icon": "octicon octicon-shield",
+    "module": "EXOS Claims AI",
+    "public": 1,
+    "sequence_id": 1,
+    "content": "[{\"id\":\"hdr1\",\"type\":\"header\",\"data\":{\"text\":\"Claims Validation Overview\",\"col\":12}},{\"id\":\"nc1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Claims Pending Validation\",\"col\":3}},{\"id\":\"nc2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Claims Approved\",\"col\":3}},{\"id\":\"nc3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Claims Rejected\",\"col\":3}},{\"id\":\"nc4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Claims Waiting Approval\",\"col\":3}},{\"id\":\"lnk1\",\"type\":\"link\",\"data\":{\"label\":\"Insurance Claim\",\"link_type\":\"DocType\",\"link_to\":\"Insurance Claim\",\"col\":6}},{\"id\":\"lnk2\",\"type\":\"link\",\"data\":{\"label\":\"Insurance Policy\",\"link_type\":\"DocType\",\"link_to\":\"Insurance Policy\",\"col\":6}}]"
+  }
+]
+

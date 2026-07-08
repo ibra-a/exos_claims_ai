@@ -1,0 +1,32 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-08 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "claim_threshold_amount",
+  "required_approvers",
+  "department",
+  "approval_sequence",
+  "is_active"
+ ],
+ "fields": [
+  {"fieldname": "claim_threshold_amount", "fieldtype": "Currency", "label": "Claim Threshold Amount", "reqd": 1},
+  {"fieldname": "required_approvers", "fieldtype": "Small Text", "label": "Required Approvers", "reqd": 1},
+  {"fieldname": "department", "fieldtype": "Data", "label": "Department"},
+  {"fieldname": "approval_sequence", "fieldtype": "Small Text", "label": "Approval Sequence"},
+  {"fieldname": "is_active", "fieldtype": "Check", "label": "Is Active", "default": "1"}
+ ],
+ "module": "EXOS Claims AI",
+ "name": "Approval Rule Configuration",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "print": 1, "email": 1, "share": 1},
+  {"role": "Claims Manager", "read": 1, "write": 1, "create": 1, "print": 1, "email": 1},
+  {"role": "Finance Manager", "read": 1, "write": 1, "create": 1, "print": 1, "email": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
+

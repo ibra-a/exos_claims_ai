@@ -1,0 +1,46 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:POL-.YYYY.-.#####",
+ "creation": "2026-07-08 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "policy_number",
+  "customer_name",
+  "policy_type",
+  "start_date",
+  "end_date",
+  "coverage_limit",
+  "deductible_amount",
+  "coverage_details",
+  "exclusions",
+ "status",
+ "attached_policy_documents"
+ ],
+ "fields": [
+  {"fieldname": "policy_number", "fieldtype": "Data", "label": "Policy Number", "reqd": 1, "unique": 1},
+  {"fieldname": "customer_name", "fieldtype": "Data", "label": "Customer Name", "reqd": 1},
+  {"fieldname": "policy_type", "fieldtype": "Select", "label": "Policy Type", "options": "Medical\nMotor\nProperty\nTravel\nLife"},
+  {"fieldname": "start_date", "fieldtype": "Date", "label": "Start Date", "reqd": 1},
+  {"fieldname": "end_date", "fieldtype": "Date", "label": "End Date", "reqd": 1},
+  {"fieldname": "coverage_limit", "fieldtype": "Currency", "label": "Coverage Limit", "reqd": 1},
+  {"fieldname": "deductible_amount", "fieldtype": "Currency", "label": "Deductible Amount"},
+  {"fieldname": "coverage_details", "fieldtype": "Long Text", "label": "Coverage Details"},
+  {"fieldname": "exclusions", "fieldtype": "Long Text", "label": "Exclusions"},
+  {"default": "Draft", "fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nActive\nExpired\nSuspended"},
+  {"fieldname": "attached_policy_documents", "fieldtype": "Attach", "label": "Attached Policy Documents"}
+ ],
+ "module": "EXOS Claims AI",
+ "name": "Insurance Policy",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "print": 1, "email": 1, "share": 1},
+  {"role": "Claims Officer", "read": 1, "write": 1, "create": 1, "print": 1, "email": 1},
+  {"role": "Claims Manager", "read": 1, "write": 1, "print": 1, "email": 1},
+  {"role": "Finance Manager", "read": 1, "print": 1, "email": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
+
