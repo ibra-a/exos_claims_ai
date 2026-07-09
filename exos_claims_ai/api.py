@@ -3,6 +3,10 @@ import requests
 import frappe
 
 
+def has_app_permission() -> bool:
+    return True
+
+
 def _ai_headers() -> dict[str, str]:
     token = frappe.conf.get("ai_service_token") or os.getenv("AI_SERVICE_TOKEN", "")
     return {"Authorization": f"Bearer {token}"} if token else {}

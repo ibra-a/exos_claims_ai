@@ -7,7 +7,7 @@ def get_data():
             "module_name": "EXOS Claims AI",
             "category": "Modules",
             "label": _("EXOS Claims AI"),
-            "color": "#1f2a44",
+            "color": "#1e5aa8",
             "icon": "octicon octicon-shield",
             "type": "module",
             "description": "Control. Consistency. Confidence.",
