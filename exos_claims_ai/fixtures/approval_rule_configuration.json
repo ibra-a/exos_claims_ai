@@ -1,6 +1,7 @@
 [
   {
     "doctype": "Approval Rule Configuration",
+    "name": "Claims Manager - Up To 20000",
     "claim_threshold_amount": 20000,
     "required_approvers": "Claims Manager",
     "department": "Claims",
@@ -9,6 +10,7 @@
   },
   {
     "doctype": "Approval Rule Configuration",
+    "name": "Claims and Finance - Above 20000",
     "claim_threshold_amount": 20000.01,
     "required_approvers": "Claims Manager, Finance Manager",
     "department": "Claims",
@@ -16,4 +18,3 @@
     "is_active": 1
   }
 ]
-

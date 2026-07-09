@@ -1,6 +1,7 @@
 [
   {
     "doctype": "Number Card",
+    "name": "Claims Pending Validation",
     "label": "Claims Pending Validation",
     "document_type": "Insurance Claim",
     "function": "Count",
@@ -9,6 +10,7 @@
   },
   {
     "doctype": "Number Card",
+    "name": "Claims Approved",
     "label": "Claims Approved",
     "document_type": "Insurance Claim",
     "function": "Count",
@@ -17,6 +19,7 @@
   },
   {
     "doctype": "Number Card",
+    "name": "Claims Rejected",
     "label": "Claims Rejected",
     "document_type": "Insurance Claim",
     "function": "Count",
@@ -25,6 +28,7 @@
   },
   {
     "doctype": "Number Card",
+    "name": "Claims Waiting Approval",
     "label": "Claims Waiting Approval",
     "document_type": "Insurance Claim",
     "function": "Count",
@@ -32,4 +36,3 @@
     "is_public": 1
   }
 ]
-
