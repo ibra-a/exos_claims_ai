@@ -4,11 +4,17 @@ LOGO_URL = "/assets/exos_claims_ai/images/exos-logo.png"
 
 
 def after_install() -> None:
-    apply_branding()
+    try:
+        apply_branding()
+    except Exception:
+        frappe.log_error("EXOS branding skipped during install")
 
 
 def after_migrate() -> None:
-    apply_branding()
+    try:
+        apply_branding()
+    except Exception:
+        frappe.log_error("EXOS branding skipped during migrate")
 
 
 def apply_branding() -> None:

@@ -7,13 +7,10 @@ app_license = "MIT"
 
 required_apps = ["erpnext"]
 
+# Workflow, workspace, cards, and approval rules are loaded via bootstrap CLI
+# after the site is Active — importing them during New Site was breaking creation.
 fixtures = [
     {"dt": "Role", "filters": [["name", "in", ["Claims Officer", "Claims Manager", "Finance Manager"]]]},
-    {"dt": "Workflow", "filters": [["name", "=", "Insurance Claim Workflow"]]},
-    {"dt": "Server Script", "filters": [["name", "in", ["Validate Claim With AI API", "Ask Claim Assistant API"]]]},
-    {"dt": "Number Card", "filters": [["name", "in", ["Claims Pending Validation", "Claims Approved", "Claims Rejected", "Claims Waiting Approval"]]]},
-    {"dt": "Workspace", "filters": [["name", "=", "EXOS Claims Control Center"]]},
-    {"dt": "Approval Rule Configuration"},
 ]
 
 doctype_js = {
