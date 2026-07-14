@@ -1,5 +1,6 @@
 import frappe
 from frappe.model.document import Document
+from frappe.utils import getdate
 
 
 class InsuranceClaim(Document):
@@ -18,6 +19,10 @@ class InsuranceClaim(Document):
             )
             if policy and policy.status != "Active":
                 frappe.throw("Selected policy is not active.")
-            if policy and not (policy.start_date <= self.incident_date <= policy.end_date):
-                frappe.throw("Incident date is outside policy coverage period.")
+            if policy:
+                incident = getdate(self.incident_date)
+                start = getdate(policy.start_date)
+                end = getdate(policy.end_date)
+                if not (start <= incident <= end):
+                    frappe.throw("Incident date is outside policy coverage period.")
 
