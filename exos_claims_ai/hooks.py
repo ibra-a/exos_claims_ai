@@ -7,11 +7,8 @@ app_license = "MIT"
 
 required_apps = ["erpnext"]
 
-# Workflow, workspace, cards, and approval rules are loaded via bootstrap CLI
-# after the site is Active — importing them during New Site was breaking creation.
-fixtures = [
-    {"dt": "Role", "filters": [["name", "in", ["Claims Officer", "Claims Manager", "Finance Manager"]]]},
-]
+# No install-time fixtures. Roles, workspace, workflow, and demo data
+# are created via bootstrap CLI after the site is Active.
 
 doctype_js = {
     "Insurance Claim": "public/js/insurance_claim.js",
