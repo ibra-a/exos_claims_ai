@@ -2,7 +2,7 @@
   {
     "doctype": "Workspace",
     "name": "EXOS Claims",
-    "title": "EXOS Claims Control Center",
+    "title": "EXOS Claims",
     "label": "EXOS Claims",
     "icon": "octicon octicon-shield",
     "module": "EXOS Claims AI",

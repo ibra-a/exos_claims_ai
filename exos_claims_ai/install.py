@@ -7,6 +7,9 @@ def after_install() -> None:
     try:
         apply_branding()
         apply_theme_defaults()
+        from exos_claims_ai.workspace_setup import ensure_workspace
+
+        ensure_workspace()
     except Exception:
         frappe.log_error("EXOS branding skipped during install")
 
@@ -15,6 +18,9 @@ def after_migrate() -> None:
     try:
         apply_branding()
         apply_theme_defaults()
+        from exos_claims_ai.workspace_setup import ensure_workspace
+
+        ensure_workspace()
     except Exception:
         frappe.log_error("EXOS branding skipped during migrate")
 
