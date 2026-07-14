@@ -1,5 +1,15 @@
 frappe.ready(function () {
-  if (window.location.pathname === "/app" || window.location.pathname === "/app/home") {
+  var path = window.location.pathname || "";
+  var onHome =
+    path === "/desk" ||
+    path === "/desk/" ||
+    path === "/app" ||
+    path === "/app/" ||
+    path === "/app/home" ||
+    path === "/desk/home" ||
+    path.endsWith("/workspaces/home");
+
+  if (onHome) {
     frappe.set_route("Workspaces", "EXOS Claims");
   }
 });

@@ -1,60 +1,93 @@
-/* EXOS enterprise theme — readable in light and dark desk modes */
+/* EXOS Claims — enterprise desk theme aligned with exoscorp.com
+   Brand: deep navy, bright blue accents, restrained mint highlight.
+   Goal: high-contrast, simple, modern B2B — readable in light and dark. */
+
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
 :root,
 body[data-theme="light"] {
-  --exos-navy: #0b1f3a;
-  --exos-blue: #1e5aa8;
+  --exos-navy: #001333;
+  --exos-navy-mid: #0a1730;
+  --exos-blue: #1a5fb4;
+  --exos-blue-bright: #4f9dff;
   --exos-blue-light: #2f7fd4;
-  --exos-sky: #e8f2fc;
-  --exos-border: #d6e4f5;
-  --exos-text: #0f2744;
-  --exos-muted: #5b6f88;
-  --exos-white: #ffffff;
+  --exos-mint: #5fd39a;
+  --exos-sky: #eaf4ff;
+  --exos-border: #d4e3f5;
+  --exos-text: #0a1426;
+  --exos-muted: #5a6c8e;
   --exos-surface: #ffffff;
-  --exos-page-bg: #f4f8fd;
-  --primary: var(--exos-blue);
-  --primary-color: var(--exos-blue);
-  --bg-color: var(--exos-page-bg);
-  --card-bg: var(--exos-white);
-  --border-color: var(--exos-border);
-  --heading-color: var(--exos-text);
-  --text-color: var(--exos-text);
-  --text-muted: var(--exos-muted);
-  --sidebar-select-color: var(--exos-sky);
-  --sidebar-text: var(--exos-text);
-  --link-color: var(--exos-blue);
-}
+  --exos-page-bg: #f3f7fc;
+  --exos-on-accent: #ffffff;
+  --exos-radius: 10px;
+  --exos-shadow: 0 1px 2px rgba(0, 19, 51, 0.04), 0 8px 24px rgba(0, 19, 51, 0.06);
 
-body[data-theme="dark"] {
-  --exos-navy: #08182d;
-  --exos-blue: #4a9eed;
-  --exos-blue-light: #6eb3f5;
-  --exos-sky: #163456;
-  --exos-border: #2a4a6b;
-  --exos-text: #edf4fc;
-  --exos-muted: #a9bfd9;
-  --exos-white: #11263f;
-  --exos-surface: #11263f;
-  --exos-page-bg: #0a1929;
   --primary: var(--exos-blue);
   --primary-color: var(--exos-blue);
   --bg-color: var(--exos-page-bg);
+  --fg-color: var(--exos-text);
   --card-bg: var(--exos-surface);
   --border-color: var(--exos-border);
   --heading-color: var(--exos-text);
   --text-color: var(--exos-text);
   --text-muted: var(--exos-muted);
+  --text-light: var(--exos-muted);
   --sidebar-select-color: var(--exos-sky);
   --sidebar-text: var(--exos-text);
-  --link-color: var(--exos-blue-light);
+  --link-color: var(--exos-blue);
+  --btn-primary-bg: var(--exos-blue);
+  --btn-primary-color: var(--exos-on-accent);
+  --control-bg: var(--exos-surface);
+  --control-bg-on-gray: #f8fafc;
+  --navbar-bg: var(--exos-navy);
 }
 
+body[data-theme="dark"] {
+  /* Match exoscorp.com dark surfaces — blue must stay bright on navy */
+  --exos-navy: #001333;
+  --exos-navy-mid: #06122c;
+  --exos-blue: #4f9dff;
+  --exos-blue-bright: #8fd0ff;
+  --exos-blue-light: #7fb8ff;
+  --exos-mint: #5fd39a;
+  --exos-sky: #13294f;
+  --exos-border: rgba(124, 170, 255, 0.22);
+  --exos-text: #eef3fb;
+  --exos-muted: #9fb0d0;
+  --exos-surface: #0a1426;
+  --exos-page-bg: #001333;
+  --exos-on-accent: #001333;
+  --exos-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.28);
+
+  --primary: var(--exos-blue);
+  --primary-color: var(--exos-blue);
+  --bg-color: var(--exos-page-bg);
+  --fg-color: var(--exos-text);
+  --card-bg: var(--exos-surface);
+  --border-color: var(--exos-border);
+  --heading-color: var(--exos-text);
+  --text-color: var(--exos-text);
+  --text-muted: var(--exos-muted);
+  --text-light: var(--exos-muted);
+  --sidebar-select-color: var(--exos-sky);
+  --sidebar-text: var(--exos-text);
+  --link-color: var(--exos-blue-bright);
+  --btn-primary-bg: var(--exos-blue);
+  --btn-primary-color: var(--exos-on-accent);
+  --control-bg: #080f1f;
+  --control-bg-on-gray: #06122c;
+  --navbar-bg: #001333;
+}
+
+body.exos-desk,
 body {
   color: var(--exos-text) !important;
-  background-color: var(--exos-page-bg);
+  background-color: var(--exos-page-bg) !important;
+  font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Global readable text */
+/* ---------- Typography & text contrast ---------- */
 .layout-main,
 .layout-main-section,
 .form-page,
@@ -62,21 +95,12 @@ body {
 .frappe-control,
 .control-label,
 .form-sidebar,
-.form-sidebar .sidebar-menu,
 .form-sidebar .sidebar-menu .menu-item,
 .form-sidebar .sidebar-menu .menu-item a,
 .form-sidebar .sidebar-menu .menu-item span,
-.form-sidebar .sidebar-menu .menu-item .menu-item-label,
-.form-sidebar .form-stats,
-.form-sidebar .form-stats-label,
 .form-sidebar .sidebar-label,
-.form-sidebar .sidebar-image-section,
-.form-sidebar .form-tags,
-.form-sidebar .form-shared,
-.form-sidebar .form-viewers,
 .form-sidebar .modified-by,
 .form-sidebar .created-by,
-.form-sidebar .form-sidebar-stats,
 .list-row-col,
 .list-row-head,
 .list-subject,
@@ -84,123 +108,120 @@ body {
 .widget-body,
 .standard-sidebar-item .sidebar-item-label,
 .desk-sidebar .sidebar-item-label,
-.user-settings,
-.user-settings .settings-item,
 .user-settings .settings-item .item-title,
-.user-settings .settings-item .item-description,
-.settings-tab,
-.settings-tab .settings-section,
-.settings-tab .settings-item,
 .settings-tab .settings-item-title,
-.settings-tab .settings-item-description,
 .modal-body,
 .modal-title,
 .dropdown-menu,
 .dropdown-menu .dropdown-item,
-.avatar-frame + span,
 .sidebar-menu a,
-.sidebar-menu li,
 a:not(.btn) {
   color: var(--exos-text) !important;
-}
-
-/* Form sidebar menus (Desk Settings, Change Password, etc.) */
-.form-sidebar .sidebar-menu .menu-item,
-.form-sidebar .sidebar-menu .sidebar-menu-item,
-.form-sidebar .sidebar-menu .dropdown-item,
-.user-image-sidebar .sidebar-menu .menu-item,
-.user-image-sidebar .sidebar-menu a {
-  color: var(--exos-text) !important;
-  opacity: 1 !important;
-}
-
-.form-sidebar .sidebar-menu .menu-item:hover,
-.form-sidebar .sidebar-menu .menu-item:hover a,
-.form-sidebar .sidebar-menu .menu-item:hover span {
-  color: var(--exos-blue) !important;
-  background: var(--exos-sky) !important;
-}
-
-body[data-theme="dark"] .form-sidebar .sidebar-menu .menu-item,
-body[data-theme="dark"] .form-sidebar .sidebar-menu .menu-item a,
-body[data-theme="dark"] .form-sidebar .sidebar-menu .menu-item span,
-body[data-theme="dark"] .form-sidebar .sidebar-label,
-body[data-theme="dark"] .user-settings .settings-item .item-title,
-body[data-theme="dark"] .settings-tab .settings-item-title {
-  color: #edf4fc !important;
-}
-
-body[data-theme="dark"] .user-settings .settings-item .item-description,
-body[data-theme="dark"] .settings-tab .settings-item-description,
-body[data-theme="dark"] .form-sidebar .text-muted,
-body[data-theme="dark"] .form-sidebar .modified-by,
-body[data-theme="dark"] .form-sidebar .created-by {
-  color: #a9bfd9 !important;
 }
 
 .text-muted,
 .help-box,
 .frappe-control .help,
-.control-value.like-disabled-input {
+.control-value.like-disabled-input,
+.user-settings .settings-item .item-description,
+.settings-tab .settings-item-description,
+.form-sidebar .text-muted {
   color: var(--exos-muted) !important;
 }
 
-a:not(.btn):hover {
-  color: var(--exos-blue-light) !important;
+a:not(.btn) {
+  color: var(--link-color) !important;
 }
 
-/* Top navigation */
+a:not(.btn):hover {
+  color: var(--exos-blue-bright) !important;
+}
+
+body[data-theme="dark"] .form-sidebar .sidebar-menu .menu-item,
+body[data-theme="dark"] .form-sidebar .sidebar-menu .menu-item a,
+body[data-theme="dark"] .form-sidebar .sidebar-menu .menu-item span,
+body[data-theme="dark"] .desk-sidebar .sidebar-item-label,
+body[data-theme="dark"] .standard-sidebar-item .sidebar-item-label,
+body[data-theme="dark"] .page-head .page-title .title-text,
+body[data-theme="dark"] .list-row-col,
+body[data-theme="dark"] .list-subject {
+  color: #eef3fb !important;
+  opacity: 1 !important;
+}
+
+body[data-theme="dark"] .number-card-widget .number,
+body[data-theme="dark"] .btn-link,
+body[data-theme="dark"] .indicator-pill.blue,
+body[data-theme="dark"] .indicator-pill.blue .indicator-pill-text {
+  color: #8fd0ff !important;
+}
+
+/* ---------- Navbar — solid brand navy (exoscorp.com) ---------- */
 .navbar {
-  background: linear-gradient(90deg, var(--exos-navy) 0%, var(--exos-blue) 100%) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 2px 12px rgba(11, 31, 58, 0.18);
+  background: var(--navbar-bg) !important;
+  border-bottom: 1px solid rgba(124, 170, 255, 0.14) !important;
+  box-shadow: none !important;
 }
 
 .navbar .navbar-brand,
 .navbar .navbar-nav > li > a,
 .navbar .nav-item > a,
 .navbar .search-bar input,
-.navbar .search-bar .awesomplete input {
-  color: #f8fbff !important;
+.navbar .search-bar .awesomplete input,
+.navbar .nav-link,
+.navbar .es-icon {
+  color: #eef3fb !important;
 }
 
 .navbar .navbar-brand {
-  font-weight: 700;
-  letter-spacing: 0.3px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .navbar .navbar-brand img,
 .app-logo {
-  height: 34px;
+  height: 32px;
   width: auto;
   object-fit: contain;
 }
 
-.page-card-head .app-logo {
-  height: 80px;
-  margin-bottom: 1rem;
+.navbar .search-bar input,
+.navbar .search-bar .awesomplete input {
+  background: rgba(143, 200, 255, 0.08) !important;
+  border: 1px solid rgba(124, 170, 255, 0.18) !important;
+  border-radius: 8px !important;
 }
 
-/* Sidebar */
+/* ---------- Sidebars ---------- */
 .desk-sidebar,
 .layout-side-section,
 .form-sidebar {
   background: var(--exos-surface) !important;
+  border-color: var(--exos-border) !important;
 }
 
 .standard-sidebar-item.selected,
-.desk-sidebar .sidebar-item-container.selected {
-  background: var(--exos-sky) !important;
-  border-radius: 8px;
-}
-
+.desk-sidebar .sidebar-item-container.selected,
 .standard-sidebar-item:hover,
 .desk-sidebar .sidebar-item-container:hover {
   background: var(--exos-sky) !important;
   border-radius: 8px;
 }
 
-/* Main content */
+body[data-theme="dark"] .standard-sidebar-item.selected,
+body[data-theme="dark"] .desk-sidebar .sidebar-item-container.selected {
+  background: rgba(79, 157, 255, 0.16) !important;
+  box-shadow: inset 3px 0 0 #4f9dff;
+}
+
+.form-sidebar .sidebar-menu .menu-item:hover,
+.form-sidebar .sidebar-menu .menu-item:hover a {
+  color: var(--exos-blue-bright) !important;
+  background: var(--exos-sky) !important;
+  border-radius: 8px;
+}
+
+/* ---------- Main canvas ---------- */
 .layout-main-section,
 .form-page,
 .form-layout {
@@ -210,12 +231,13 @@ a:not(.btn):hover {
 
 .layout-main-section {
   border: 1px solid var(--exos-border);
-  border-radius: 14px;
-  box-shadow: 0 8px 24px rgba(15, 39, 68, 0.06);
+  border-radius: var(--exos-radius);
+  box-shadow: var(--exos-shadow);
 }
 
 .page-head {
   border-bottom: 1px solid var(--exos-border);
+  background: transparent !important;
 }
 
 .page-head .page-title .title-text,
@@ -223,60 +245,77 @@ a:not(.btn):hover {
 .head-title {
   color: var(--exos-text) !important;
   font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .page-head .page-title .indicator-pill {
-  background: var(--exos-sky);
-  color: var(--exos-blue);
-  border: 1px solid var(--exos-border);
+  background: rgba(95, 211, 154, 0.14);
+  color: var(--exos-mint) !important;
+  border: 1px solid rgba(95, 211, 154, 0.35);
+  border-radius: 999px;
+  font-weight: 600;
 }
 
-/* Inputs stay readable */
+/* ---------- Controls ---------- */
 input,
 textarea,
 select,
 .frappe-control input,
 .frappe-control textarea,
 .frappe-control select,
-.like-disabled-input {
+.like-disabled-input,
+.awesomplete > input {
   color: var(--exos-text) !important;
-  background-color: var(--exos-surface) !important;
+  background-color: var(--control-bg) !important;
   border-color: var(--exos-border) !important;
+  border-radius: 8px !important;
 }
 
-/* Workspace */
+input:focus,
+textarea:focus,
+select:focus,
+.frappe-control input:focus,
+.frappe-control textarea:focus {
+  border-color: var(--exos-blue) !important;
+  box-shadow: 0 0 0 3px rgba(79, 157, 255, 0.22) !important;
+}
+
+/* ---------- Workspace widgets ---------- */
 .workspace-block .widget-head .widget-title,
 .ce-header {
   color: var(--exos-text) !important;
   font-weight: 700 !important;
+  letter-spacing: -0.01em;
 }
 
-.workspace-block .widget {
+.workspace-block .widget,
+.number-card-widget,
+.shortcut-widget-box {
   border: 1px solid var(--exos-border);
-  border-radius: 12px;
+  border-radius: var(--exos-radius);
   background: var(--exos-surface) !important;
+  box-shadow: none;
 }
 
-.number-card-widget {
-  border: 1px solid var(--exos-border);
-  border-radius: 12px;
-  background: var(--exos-surface) !important;
+body[data-theme="dark"] .workspace-block .widget,
+body[data-theme="dark"] .number-card-widget,
+body[data-theme="dark"] .shortcut-widget-box {
+  background: #0a1426 !important;
+  border-color: rgba(124, 170, 255, 0.18);
 }
 
 .number-card-widget .widget-head .widget-title {
   color: var(--exos-muted) !important;
   font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .number-card-widget .number {
   color: var(--exos-blue) !important;
-  font-weight: 700;
-}
-
-.shortcut-widget-box {
-  border: 1px solid var(--exos-border);
-  border-radius: 12px;
-  background: var(--exos-surface) !important;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .shortcut-widget-box .widget-head .widget-title {
@@ -284,7 +323,7 @@ select,
   font-weight: 600;
 }
 
-/* Forms and lists */
+/* ---------- Lists / forms ---------- */
 .form-section .section-head,
 .list-row-head {
   color: var(--exos-text) !important;
@@ -293,56 +332,141 @@ select,
 
 .list-row-container .list-row {
   color: var(--exos-text) !important;
+  border-color: var(--exos-border) !important;
 }
 
 .list-row-container .list-row:hover {
   background: var(--exos-sky) !important;
 }
 
+body[data-theme="dark"] .list-row-container .list-row:hover {
+  background: rgba(79, 157, 255, 0.1) !important;
+}
+
+/* ---------- Buttons ---------- */
 .btn-primary,
 .btn-primary:not(:disabled) {
   background: var(--exos-blue) !important;
   border-color: var(--exos-blue) !important;
-  color: #fff !important;
+  color: var(--exos-on-accent) !important;
+  font-weight: 600;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+body[data-theme="dark"] .btn-primary,
+body[data-theme="dark"] .btn-primary:not(:disabled) {
+  background: #4f9dff !important;
+  border-color: #4f9dff !important;
+  color: #001333 !important;
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
   background: var(--exos-blue-light) !important;
   border-color: var(--exos-blue-light) !important;
+  filter: brightness(1.05);
 }
 
-.indicator-pill,
-.badge-primary {
-  border-radius: 999px;
+body[data-theme="dark"] .btn-primary:hover,
+body[data-theme="dark"] .btn-primary:focus {
+  background: #8fd0ff !important;
+  border-color: #8fd0ff !important;
+  color: #001333 !important;
 }
 
-/* Login */
+.btn-default,
+.btn-secondary {
+  border-radius: 8px !important;
+  border-color: var(--exos-border) !important;
+  color: var(--exos-text) !important;
+  background: transparent !important;
+}
+
+body[data-theme="dark"] .btn-default,
+body[data-theme="dark"] .btn-secondary {
+  background: rgba(143, 200, 255, 0.06) !important;
+  border-color: rgba(124, 170, 255, 0.22) !important;
+  color: #eef3fb !important;
+}
+
+/* Mint accent for positive status only */
+.indicator-pill.green,
+.indicator-pill.green .indicator-pill-text {
+  color: var(--exos-mint) !important;
+}
+
+.indicator-pill.blue {
+  background: rgba(79, 157, 255, 0.16) !important;
+  border: 1px solid rgba(79, 157, 255, 0.35);
+}
+
+body[data-theme="dark"] .indicator-pill.blue {
+  background: rgba(79, 157, 255, 0.2) !important;
+  color: #8fd0ff !important;
+}
+
+/* ---------- Login — brand first impression ---------- */
 .for-login,
 .for-forgot,
 .for-signup {
-  background: linear-gradient(135deg, #f4f8fd 0%, #e8f2fc 100%);
+  background:
+    radial-gradient(900px 560px at 50% 18%, rgba(79, 157, 255, 0.18), transparent 55%),
+    linear-gradient(180deg, #06122c, #001333) !important;
 }
 
 .for-login .page-card,
 .for-forgot .page-card,
 .for-signup .page-card {
-  border: 1px solid var(--exos-border);
-  border-radius: 16px;
-  box-shadow: 0 16px 40px rgba(15, 39, 68, 0.08);
-  background: #fff !important;
+  border: 1px solid rgba(124, 170, 255, 0.18);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(2, 7, 18, 0.55);
+  background: rgba(9, 16, 33, 0.96) !important;
 }
 
 .for-login .page-card-head,
 .for-forgot .page-card-head,
 .for-signup .page-card-head,
 .for-login label,
-.for-login .form-control {
-  color: var(--exos-text) !important;
+.for-login .form-control,
+.for-login .sign-up-message,
+.for-login .forgot-password-message a {
+  color: #eef3fb !important;
+}
+
+.for-login .page-card .page-card-head .app-logo {
+  height: 56px;
 }
 
 .for-login .btn-login,
 .for-forgot .btn-primary {
-  background: var(--exos-blue) !important;
-  border-color: var(--exos-blue) !important;
+  background: #4f9dff !important;
+  border-color: #4f9dff !important;
+  color: #001333 !important;
+  font-weight: 700;
+  border-radius: 8px !important;
+}
+
+.for-login .form-control {
+  background: #080f1f !important;
+  border-color: rgba(124, 170, 255, 0.22) !important;
+}
+
+/* App switcher / workspace chrome */
+.app-switcher-dropdown,
+.apps-container .app-item {
+  border-radius: 10px;
+}
+
+body[data-theme="dark"] .modal-content,
+body[data-theme="dark"] .dropdown-menu {
+  background: #0a1426 !important;
+  border: 1px solid rgba(124, 170, 255, 0.18) !important;
+  color: #eef3fb !important;
+}
+
+body[data-theme="dark"] .dropdown-item:hover,
+body[data-theme="dark"] .dropdown-item:focus {
+  background: rgba(79, 157, 255, 0.14) !important;
+  color: #8fd0ff !important;
 }
