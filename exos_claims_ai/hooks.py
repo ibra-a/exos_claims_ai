@@ -24,7 +24,7 @@ add_to_apps_screen = [
         "name": "exos_claims_ai",
         "logo": "/assets/exos_claims_ai/images/exos-logo.png",
         "title": "EXOS Claims",
-        "route": "/app/exos-claims",
+        "route": "/desk/exos-claims",
         "has_permission": "exos_claims_ai.api.has_app_permission",
     }
 ]
