@@ -1,14 +1,41 @@
-frappe.ready(function () {
-  var workspace = "EXOS Claims";
-  var workspaceSlug = "exos-claims";
+/* EXOS Claims desk helpers — keep this file small and early-safe. */
 
-  // Fix stale routes like /desk/exos-claims-control-center after title changes.
-  if (window.location.pathname.indexOf("exos-claims-control-center") !== -1) {
-    frappe.set_route("Workspaces", workspace);
+(function () {
+  var TARGET = "/desk/exos-claims";
+  var STALE = [
+    "exos-claims-control-center",
+    "EXOS%20Claims%20Control%20Center",
+    "exos%20claims%20control%20center",
+  ];
+
+  function isStalePath(path) {
+    path = (path || "").toLowerCase();
+    for (var i = 0; i < STALE.length; i++) {
+      if (path.indexOf(STALE[i].toLowerCase()) !== -1) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Hard redirect before desk finishes routing (avoids "Page not found").
+  if (isStalePath(window.location.pathname)) {
+    window.location.replace(TARGET);
+    return;
+  }
+})();
+
+frappe.ready(function () {
+  var path = window.location.pathname || "";
+
+  if (
+    path.toLowerCase().indexOf("exos-claims-control-center") !== -1 ||
+    path.toLowerCase().indexOf("exos%20claims%20control%20center") !== -1
+  ) {
+    window.location.replace("/desk/exos-claims");
     return;
   }
 
-  var path = window.location.pathname || "";
   var onHome =
     path === "/desk" ||
     path === "/desk/" ||
@@ -19,14 +46,14 @@ frappe.ready(function () {
     path.endsWith("/workspaces/home");
 
   if (onHome) {
-    frappe.set_route("Workspaces", workspace);
+    window.location.replace("/desk/exos-claims");
   }
 });
 
 frappe.ui.keys.add_shortcut({
   shortcut: "ctrl+shift+e",
   action: function () {
-    frappe.set_route("Workspaces", "EXOS Claims");
+    window.location.assign("/desk/exos-claims");
   },
   description: __("Open EXOS Claims"),
 });
