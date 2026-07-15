@@ -8,6 +8,8 @@
   "field_order": [
     "llm_section",
     "llm_mode",
+    "groq_api_key",
+    "llm_model",
     "cursor_api_key",
     "cursor_model",
     "ai_service_url"
@@ -16,21 +18,34 @@
     {
       "fieldname": "llm_section",
       "fieldtype": "Section Break",
-      "label": "Claims Copilot LLM (Cursor)"
+      "label": "Claims Copilot LLM"
     },
     {
-      "default": "cursor",
-      "description": "cursor = Cursor Cloud Agents API (recommended for demo). off = keyword rules only.",
+      "default": "groq",
+      "description": "groq = fast chat (recommended for demo). cursor = Cursor Agents (slower). off = keyword rules only.",
       "fieldname": "llm_mode",
       "fieldtype": "Select",
       "label": "LLM Mode",
-      "options": "cursor\noff"
+      "options": "groq\ncursor\noff"
+    },
+    {
+      "fieldname": "groq_api_key",
+      "fieldtype": "Password",
+      "label": "Groq API Key",
+      "description": "From https://console.groq.com/keys — used when LLM Mode is groq."
+    },
+    {
+      "default": "llama-3.1-8b-instant",
+      "fieldname": "llm_model",
+      "fieldtype": "Data",
+      "label": "LLM Model",
+      "description": "Groq: llama-3.1-8b-instant or llama-3.3-70b-versatile."
     },
     {
       "fieldname": "cursor_api_key",
       "fieldtype": "Password",
       "label": "Cursor API Key",
-      "description": "From https://cursor.com/dashboard/integrations — user or service-account key."
+      "description": "Optional — only if LLM Mode is cursor."
     },
     {
       "default": "composer-2.5",
@@ -42,11 +57,11 @@
       "fieldname": "ai_service_url",
       "fieldtype": "Data",
       "label": "Claims Agent URL (optional)",
-      "description": "Optional FastAPI agent base URL. Leave blank to use Cursor + offline fallback."
+      "description": "Optional FastAPI agent base URL. Leave blank to use Groq/Cursor + offline fallback."
     }
   ],
   "issingle": 1,
-  "modified": "2026-07-15 18:00:00.000000",
+  "modified": "2026-07-15 19:00:00.000000",
   "module": "EXOS Claims AI",
   "name": "EXOS AI Settings",
   "naming_rule": "",

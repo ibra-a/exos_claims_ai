@@ -889,18 +889,29 @@ def ask_claim_assistant(claim_name: str, question: str):
     except Exception:
         pass
 
-    # Cursor Cloud Agents (natural-language, evidence-grounded)
-    cursor_out = _cursor_grounded_ask(question, claim=claim, policy=policy)
-    if cursor_out:
-        return cursor_out
+    # Fast Groq (or Cursor) evidence-grounded NL — then keyword offline fallback
+    llm_out = _llm_grounded_ask(question, claim=claim, policy=policy)
+    if llm_out:
+        return llm_out
 
     return _offline_ask(question, claim=claim, policy=policy)
 
 
 def _exos_ai_settings() -> dict:
-    """Load EXOS AI Settings single (Cursor key, model, mode)."""
+    """Load EXOS AI Settings single (Groq / Cursor keys, model, mode)."""
     out = {
-        "llm_mode": (frappe.conf.get("exos_llm_mode") or os.getenv("EXOS_LLM_MODE") or "cursor"),
+        "llm_mode": (frappe.conf.get("exos_llm_mode") or os.getenv("EXOS_LLM_MODE") or "groq"),
+        "groq_api_key": (
+            frappe.conf.get("groq_api_key")
+            or os.getenv("GROQ_API_KEY")
+            or os.getenv("EXOS_LLM_API_KEY")
+            or ""
+        ),
+        "llm_model": (
+            frappe.conf.get("exos_llm_model")
+            or os.getenv("EXOS_LLM_MODEL")
+            or "llama-3.1-8b-instant"
+        ),
         "cursor_api_key": (
             frappe.conf.get("cursor_api_key")
             or os.getenv("CURSOR_API_KEY")
@@ -917,8 +928,16 @@ def _exos_ai_settings() -> dict:
             doc = frappe.get_single("EXOS AI Settings")
             if doc.get("llm_mode"):
                 out["llm_mode"] = doc.llm_mode
+            if doc.get("llm_model"):
+                out["llm_model"] = doc.llm_model
             if doc.get("cursor_model"):
                 out["cursor_model"] = doc.cursor_model
+            try:
+                key = doc.get_password("groq_api_key")
+                if key:
+                    out["groq_api_key"] = key
+            except Exception:
+                pass
             try:
                 key = doc.get_password("cursor_api_key")
                 if key:
@@ -932,20 +951,8 @@ def _exos_ai_settings() -> dict:
     return out
 
 
-def _cursor_grounded_ask(question: str, claim=None, policy: Optional[dict] = None) -> Optional[dict]:
-    """Call Cursor Cloud Agents API (no-repo) for NL Copilot answers."""
-    import base64
-    import re
-    import time
-
-    settings = _exos_ai_settings()
-    mode = (settings.get("llm_mode") or "off").lower()
-    if mode in {"off", "0", "false", "disabled"}:
-        return None
-    api_key = (settings.get("cursor_api_key") or "").strip()
-    if not api_key:
-        return None
-
+def _claim_ask_context(question: str, claim=None, policy: Optional[dict] = None) -> tuple:
+    """Shared claim facts + evidence snippets for grounded Copilot."""
     policy = policy or {}
     docs = _claim_documents(claim.name) if claim else []
     facts = {
@@ -991,7 +998,151 @@ def _cursor_grounded_ask(question: str, claim=None, policy: Optional[dict] = Non
             "text": (getattr(claim, "claim_description", None) or "")[:400],
         },
     ]
+    return facts, evidence
 
+
+def _parse_copilot_json(raw: str) -> Optional[dict]:
+    import re
+
+    text = (raw or "").strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"\s*```$", "", text)
+    try:
+        return json.loads(text)
+    except Exception:
+        match = re.search(r"\{[\s\S]*\}", text)
+        if match:
+            try:
+                return json.loads(match.group(0))
+            except Exception:
+                return None
+    return None
+
+
+def _format_copilot_result(
+    parsed: dict, *, question: str, evidence: list, mode: str, model: str
+) -> Optional[dict]:
+    verdict = str(parsed.get("verdict") or "Not mentioned").strip()
+    if verdict not in {"Supported", "Contradicted", "Not mentioned"}:
+        verdict = "Not mentioned"
+    try:
+        conf = int(parsed.get("confidence") or 70)
+    except (TypeError, ValueError):
+        conf = 50
+    answer = (parsed.get("answer") or "").strip()
+    if not answer:
+        return None
+    return {
+        "answer": answer,
+        "confidence": max(0, min(100, conf)),
+        "verdict": verdict,
+        "evidence": evidence[:3] if verdict != "Not mentioned" else [],
+        "document_reference": parsed.get("document_reference"),
+        "page_number": parsed.get("page_number"),
+        "extracted_text": parsed.get("extracted_text"),
+        "question": question,
+        "mode": mode,
+        "model": model,
+    }
+
+
+def _llm_grounded_ask(question: str, claim=None, policy: Optional[dict] = None) -> Optional[dict]:
+    """Groq (fast) or Cursor Agents — evidence-grounded NL Copilot."""
+    settings = _exos_ai_settings()
+    mode = (settings.get("llm_mode") or "off").lower()
+    if mode in {"off", "0", "false", "disabled"}:
+        return None
+    if mode in {"groq", "openai", "on", "llm"}:
+        out = _groq_grounded_ask(question, claim=claim, policy=policy, settings=settings)
+        if out:
+            return out
+    if mode == "cursor":
+        return _cursor_grounded_ask(question, claim=claim, policy=policy, settings=settings)
+    # Default / unknown: try Groq then Cursor if keys exist
+    out = _groq_grounded_ask(question, claim=claim, policy=policy, settings=settings)
+    if out:
+        return out
+    return _cursor_grounded_ask(question, claim=claim, policy=policy, settings=settings)
+
+
+def _groq_grounded_ask(
+    question: str, claim=None, policy: Optional[dict] = None, settings: Optional[dict] = None
+) -> Optional[dict]:
+    """OpenAI-compatible chat via Groq (or any GROQ/OpenAI key)."""
+    settings = settings or _exos_ai_settings()
+    api_key = (settings.get("groq_api_key") or "").strip()
+    if not api_key:
+        return None
+
+    facts, evidence = _claim_ask_context(question, claim=claim, policy=policy)
+    system = (
+        "You are EXOS Claims Copilot — evidence-grounded only. "
+        "Answer ONLY from CLAIM FACTS and EVIDENCE. Never invent. "
+        "verdict must be Supported | Contradicted | Not mentioned. "
+        "Respond with ONE JSON object only, no markdown: "
+        '{"answer":"...","verdict":"...","confidence":0-100,'
+        '"document_reference":"... or null","page_number":number or null,'
+        '"extracted_text":"short quote or null"}'
+    )
+    facts_lines = "\n".join(f"- {k}: {v}" for k, v in facts.items() if v not in (None, ""))
+    ev_lines = "\n".join(
+        f"{i}. doc={e['document']} page={e['page']} text={e['text'][:400]}"
+        for i, e in enumerate(evidence, 1)
+    )
+    user = f"CLAIM FACTS:\n{facts_lines}\n\nEVIDENCE:\n{ev_lines}\n\nQUESTION: {question}\n"
+    model = settings.get("llm_model") or "llama-3.1-8b-instant"
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    try:
+        resp = requests.post(
+            url,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+                "temperature": 0.1,
+                "max_tokens": 500,
+            },
+            timeout=20,
+        )
+        if resp.status_code >= 400:
+            frappe.log_error(resp.text[:500], "EXOS Groq ask failed")
+            return None
+        data = resp.json()
+        text = (
+            ((data.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+        )
+    except Exception as exc:
+        frappe.log_error(str(exc)[:500], "EXOS Groq ask exception")
+        return None
+
+    parsed = _parse_copilot_json(text)
+    if not parsed:
+        return None
+    return _format_copilot_result(
+        parsed, question=question, evidence=evidence, mode="groq", model=model
+    )
+
+
+def _cursor_grounded_ask(
+    question: str, claim=None, policy: Optional[dict] = None, settings: Optional[dict] = None
+) -> Optional[dict]:
+    """Call Cursor Cloud Agents API (no-repo) — slower; optional fallback."""
+    import base64
+    import time
+
+    settings = settings or _exos_ai_settings()
+    api_key = (settings.get("cursor_api_key") or "").strip()
+    if not api_key:
+        return None
+
+    facts, evidence = _claim_ask_context(question, claim=claim, policy=policy)
     system = (
         "You are EXOS Claims Copilot — evidence-grounded only. "
         "Answer ONLY from CLAIM FACTS and EVIDENCE. Never invent. "
@@ -1068,45 +1219,12 @@ def _cursor_grounded_ask(question: str, claim=None, policy: Optional[dict] = Non
     except Exception:
         pass
 
-    raw = (result_text or "").strip()
-    if raw.startswith("```"):
-        raw = re.sub(r"^```(?:json)?\s*", "", raw)
-        raw = re.sub(r"\s*```$", "", raw)
-    parsed = None
-    try:
-        parsed = json.loads(raw)
-    except Exception:
-        match = re.search(r"\{[\s\S]*\}", raw)
-        if match:
-            try:
-                parsed = json.loads(match.group(0))
-            except Exception:
-                parsed = None
+    parsed = _parse_copilot_json(result_text)
     if not parsed:
         return None
-
-    verdict = str(parsed.get("verdict") or "Not mentioned").strip()
-    if verdict not in {"Supported", "Contradicted", "Not mentioned"}:
-        verdict = "Not mentioned"
-    try:
-        conf = int(parsed.get("confidence") or 70)
-    except (TypeError, ValueError):
-        conf = 50
-    answer = (parsed.get("answer") or "").strip()
-    if not answer:
-        return None
-    return {
-        "answer": answer,
-        "confidence": max(0, min(100, conf)),
-        "verdict": verdict,
-        "evidence": evidence[:3] if verdict != "Not mentioned" else [],
-        "document_reference": parsed.get("document_reference"),
-        "page_number": parsed.get("page_number"),
-        "extracted_text": parsed.get("extracted_text"),
-        "question": question,
-        "mode": "cursor-cloud",
-        "model": model,
-    }
+    return _format_copilot_result(
+        parsed, question=question, evidence=evidence, mode="cursor-cloud", model=model
+    )
 
 
 @frappe.whitelist()
