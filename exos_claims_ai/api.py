@@ -967,8 +967,8 @@ def _claim_ask_context(question: str, claim=None, policy: Optional[dict] = None)
         "policy_end": policy.get("end_date"),
         "coverage_limit": policy.get("coverage_limit"),
         "deductible_amount": policy.get("deductible_amount"),
-        "coverage_details": (policy.get("coverage_details") or "")[:400],
-        "exclusions": (policy.get("exclusions") or "")[:400],
+        "coverage_details": (policy.get("coverage_details") or "")[:900],
+        "exclusions": (policy.get("exclusions") or "")[:600],
         "documents": ", ".join(docs[:12]),
     }
     evidence = [
@@ -980,7 +980,7 @@ def _claim_ask_context(question: str, claim=None, policy: Optional[dict] = None)
         {
             "document": "Policy.pdf",
             "page": 12,
-            "text": (policy.get("coverage_details") or "Coverage terms")[:300],
+            "text": (policy.get("coverage_details") or "Coverage terms")[:600],
         },
         {
             "document": "Coverage_Schedule.xlsx",
@@ -990,12 +990,12 @@ def _claim_ask_context(question: str, claim=None, policy: Optional[dict] = None)
         {
             "document": "Policy.pdf",
             "page": 18,
-            "text": (policy.get("exclusions") or "Exclusions")[:300],
+            "text": (policy.get("exclusions") or "Exclusions")[:500],
         },
         {
             "document": "Claim",
             "page": 1,
-            "text": (getattr(claim, "claim_description", None) or "")[:400],
+            "text": (getattr(claim, "claim_description", None) or "")[:700],
         },
     ]
     return facts, evidence
