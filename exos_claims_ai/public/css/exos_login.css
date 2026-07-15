@@ -1,171 +1,118 @@
-/* EXOS Claims — login portal (website). Matches exoscorp.com navy + mint green.
-   Layout inspired by centered white card on deep navy; accents use EXOS mint, not orange. */
+/* EXOS login portal — Frappe v16 uses body[data-path=login], NOT body.for-login.
+   Must beat login.bundle.css (loads after Website Theme). */
 
-:root {
-  --exos-navy: #001333;
-  --exos-navy-mid: #06122c;
-  --exos-mint: #5fd39a;
-  --exos-mint-deep: #3db87a;
-  --exos-blue: #4f9dff;
-  --exos-text: #0a1426;
-  --exos-muted: #5a6c8e;
-  --exos-field: #f1f4f8;
-}
-
-body.for-login,
-body.for-forgot,
-body.for-signup,
-html body.for-login {
+html body[data-path="login"],
+html body[data-path="login"] .page-container,
+html body[data-path="login"] .main-section,
+html body[data-path="login"] .page-content-wrapper,
+html body[data-path="forgot"],
+html body[data-path="login"] .web-page-content {
+  background: #001333 !important;
+  background-color: #001333 !important;
+  background-image:
+    radial-gradient(900px 520px at 50% 12%, rgba(95, 211, 154, 0.14), transparent 55%),
+    radial-gradient(700px 480px at 85% 90%, rgba(79, 157, 255, 0.14), transparent 50%),
+    linear-gradient(180deg, #06122c, #001333) !important;
   min-height: 100vh !important;
-  background:
-    radial-gradient(900px 520px at 50% 12%, rgba(95, 211, 154, 0.12), transparent 55%),
-    radial-gradient(700px 480px at 80% 90%, rgba(79, 157, 255, 0.12), transparent 50%),
-    linear-gradient(180deg, var(--exos-navy-mid), var(--exos-navy)) !important;
-  font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif !important;
+  min-height: 100svh !important;
 }
 
-/* Hide default web footer on login — we render Powered by Myndrex ourselves */
-body.for-login .web-footer,
-body.for-forgot .web-footer,
-body.for-signup .web-footer {
+body[data-path="login"] .web-footer {
   display: none !important;
 }
 
-body.for-login .page-card,
-body.for-forgot .page-card,
-body.for-signup .page-card {
+/* White card on navy — like reference screenshot */
+body[data-path="login"] .for-login .page-card,
+body[data-path="login"] .for-forgot .page-card,
+body[data-path="login"] .for-signup .page-card,
+body[data-path="login"] .for-login-with-email-link .page-card,
+body[data-path="login"] .for-email-login .page-card {
   background: #ffffff !important;
+  background-color: #ffffff !important;
   border: none !important;
   border-radius: 16px !important;
-  box-shadow: 0 24px 64px rgba(0, 8, 24, 0.45) !important;
-  padding: 28px 28px 24px !important;
-  max-width: 420px;
+  box-shadow: 0 24px 64px rgba(0, 8, 24, 0.5) !important;
+  max-width: 420px !important;
+  padding: 28px !important;
 }
 
-body.for-login .page-card-head,
-body.for-forgot .page-card-head,
-body.for-signup .page-card-head {
-  border: none !important;
-  background: transparent !important;
-  padding-bottom: 8px !important;
-}
-
-body.for-login .page-card .page-card-head .app-logo,
-body.for-login img.app-logo {
-  height: 52px !important;
+body[data-path="login"] img.app-logo {
+  height: 48px !important;
   width: auto !important;
   max-width: 220px !important;
   object-fit: contain !important;
-  margin: 4px auto 12px !important;
-  display: block !important;
 }
 
-body.for-login .page-card-head h4,
-body.for-login .page-card-head .title {
-  color: var(--exos-text) !important;
-  font-weight: 700 !important;
+body[data-path="login"] .page-card-head h4,
+body[data-path="login"] .page-card-head .title,
+body[data-path="login"] .for-login .page-card .page-card-head,
+body[data-path="login"] .for-login label,
+body[data-path="login"] .for-login .page-card-body {
+  color: #0a1426 !important;
 }
 
-body.for-login label,
-body.for-forgot label,
-body.for-signup label {
-  color: var(--exos-muted) !important;
-  font-weight: 600 !important;
-  font-size: 12px !important;
-}
-
-body.for-login .form-control,
-body.for-forgot .form-control,
-body.for-signup .form-control {
-  background: var(--exos-field) !important;
+body[data-path="login"] .for-login .form-control,
+body[data-path="login"] .for-login input[type="text"],
+body[data-path="login"] .for-login input[type="email"],
+body[data-path="login"] .for-login input[type="password"] {
+  background: #f1f4f8 !important;
   border: 1px solid #e2e8f0 !important;
+  color: #0a1426 !important;
   border-radius: 10px !important;
-  color: var(--exos-text) !important;
-  min-height: 44px !important;
-  box-shadow: none !important;
 }
 
-body.for-login .form-control:focus {
-  border-color: var(--exos-mint) !important;
-  box-shadow: 0 0 0 3px rgba(95, 211, 154, 0.22) !important;
-}
-
-/* Primary CTA — EXOS mint (website green), not orange */
-body.for-login .btn-login,
-body.for-login .btn-primary,
-body.for-forgot .btn-primary,
-body.for-signup .btn-primary,
-body.for-login button[type="submit"] {
-  background: var(--exos-mint) !important;
-  border-color: var(--exos-mint) !important;
-  color: var(--exos-navy) !important;
+/* Mint Continue / Login CTA — beat gray-900 from login.bundle */
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login,
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-primary,
+body[data-path="login"] .for-login .btn-login,
+body[data-path="login"] .for-login button.btn-primary,
+body[data-path="login"] .for-login .page-card-actions .btn-login:not(:disabled) {
+  background: #5fd39a !important;
+  background-color: #5fd39a !important;
+  border: none !important;
+  color: #001333 !important;
   font-weight: 700 !important;
   border-radius: 10px !important;
-  min-height: 46px !important;
-  letter-spacing: 0.01em;
 }
 
-body.for-login .btn-login:hover,
-body.for-login .btn-primary:hover,
-body.for-login button[type="submit"]:hover {
-  background: var(--exos-mint-deep) !important;
-  border-color: var(--exos-mint-deep) !important;
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login:hover,
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login:focus,
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login:active {
+  background: #3db87a !important;
+  background-color: #3db87a !important;
   color: #ffffff !important;
 }
 
-/* Forgot password + secondary links → mint */
-body.for-login .forgot-password-message a,
-body.for-login .sign-up-message a,
-body.for-login a:not(.btn) {
-  color: var(--exos-mint-deep) !important;
+/* Forgot password + links in EXOS mint */
+body[data-path="login"] .for-login .forgot-password-message a,
+body[data-path="login"] .for-login a:not(.btn) {
+  color: #3db87a !important;
   font-weight: 600 !important;
 }
 
-body.for-login .forgot-password-message a:hover {
-  color: var(--exos-mint) !important;
-}
-
-/* Social / alternate login buttons */
-body.for-login .btn-default,
-body.for-login .btn-login-option,
-body.for-login .social-logins .btn,
-body.for-login .btn-secondary {
-  background: #ffffff !important;
+/* Secondary option buttons */
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login-option,
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-signup {
+  background: #f1f4f8 !important;
+  color: #3db87a !important;
   border: 1px solid #e2e8f0 !important;
-  color: var(--exos-mint-deep) !important;
   font-weight: 600 !important;
-  border-radius: 10px !important;
 }
 
-body.for-login .btn-default:hover,
-body.for-login .social-logins .btn:hover {
-  border-color: var(--exos-mint) !important;
-  color: var(--exos-navy) !important;
-  background: rgba(95, 211, 154, 0.08) !important;
-}
-
-body.for-login .login-divider,
-body.for-login .or-separator,
-body.for-login p.text-muted {
-  color: #94a3b8 !important;
-}
-
-/* Powered by Myndrex.ai — fixed footer in EXOS mint */
-body.for-login::after,
-body.for-forgot::after,
-body.for-signup::after {
+/* Powered by Myndrex — fixed footer */
+body[data-path="login"]::after {
   content: "Powered by Myndrex.ai";
   position: fixed;
   left: 0;
   right: 0;
   bottom: 22px;
+  z-index: 9999;
   text-align: center;
-  z-index: 40;
   pointer-events: none;
   font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--exos-mint);
-  text-shadow: 0 1px 12px rgba(0, 8, 24, 0.45);
+  color: #5fd39a !important;
+  text-shadow: 0 1px 14px rgba(0, 8, 24, 0.55);
 }

@@ -1,0 +1,47 @@
+/* Companion CSS for overridden /login (Portal Pages).
+   Primary paint lives in login.html <style> so Frappe Cloud serves it
+   without waiting on asset rebuild. This file mirrors those rules. */
+
+body {
+  background-color: #001333 !important;
+  background-image:
+    radial-gradient(900px 520px at 50% 12%, rgba(95, 211, 154, 0.14), transparent 55%),
+    linear-gradient(180deg, #06122c, #001333) !important;
+}
+
+body .web-footer {
+  display: none !important;
+}
+
+.for-login .page-card,
+.for-forgot .page-card,
+.for-signup .page-card,
+.for-login-with-email-link .page-card {
+  background-color: #ffffff !important;
+  border-radius: 16px !important;
+  box-shadow: 0 24px 64px rgba(0, 8, 24, 0.5) !important;
+}
+
+.for-login .page-card .page-card-actions .btn-login {
+  background: #5fd39a !important;
+  color: #001333 !important;
+  border: none !important;
+  font-weight: 700 !important;
+}
+
+.for-login .forgot-password-message a {
+  color: #3db87a !important;
+  font-weight: 600 !important;
+}
+
+.exos-login-powered {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 22px;
+  text-align: center;
+  color: #5fd39a;
+  font-weight: 600;
+  font-size: 13px;
+  z-index: 50;
+}
