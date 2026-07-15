@@ -29,7 +29,7 @@
   {"fieldname": "incident_date", "fieldtype": "Date", "label": "Incident Date", "reqd": 1},
   {"fieldname": "claim_amount", "fieldtype": "Currency", "label": "Claim Amount", "reqd": 1},
   {"fieldname": "claim_description", "fieldtype": "Long Text", "label": "Claim Description"},
-  {"default": "Draft", "fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nPending AI Validation\nAI Validated\nPending Approval\nApproved\nRejected"},
+  {"default": "Draft", "fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nPending AI Validation\nAI Validated\nPending Approval\nPending Finance Approval\nApproved\nRejected"},
   {"fieldname": "claim_form", "fieldtype": "Attach", "label": "Claim Form"},
   {"fieldname": "invoice", "fieldtype": "Attach", "label": "Invoice"},
   {"fieldname": "medical_report", "fieldtype": "Attach", "label": "Medical Report"},

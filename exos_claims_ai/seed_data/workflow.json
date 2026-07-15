@@ -11,6 +11,7 @@
       {"state": "Pending AI Validation", "doc_status": "0", "allow_edit": "Claims Officer"},
       {"state": "AI Validated", "doc_status": "0", "allow_edit": "Claims Manager"},
       {"state": "Pending Approval", "doc_status": "0", "allow_edit": "Claims Manager"},
+      {"state": "Pending Finance Approval", "doc_status": "0", "allow_edit": "Finance Manager"},
       {"state": "Approved", "doc_status": "0", "allow_edit": "Claims Manager"},
       {"state": "Rejected", "doc_status": "0", "allow_edit": "Claims Manager"}
     ],
@@ -18,9 +19,38 @@
       {"state": "Draft", "action": "Submit for Validation", "next_state": "Pending AI Validation", "allowed": "Claims Officer"},
       {"state": "Pending AI Validation", "action": "Mark AI Validated", "next_state": "AI Validated", "allowed": "Claims Officer"},
       {"state": "AI Validated", "action": "Send for Approval", "next_state": "Pending Approval", "allowed": "Claims Manager"},
-      {"state": "Pending Approval", "action": "Approve", "next_state": "Approved", "allowed": "Claims Manager"},
-      {"state": "Pending Approval", "action": "Reject", "next_state": "Rejected", "allowed": "Claims Manager"}
+      {
+        "state": "Pending Approval",
+        "action": "Approve",
+        "next_state": "Approved",
+        "allowed": "Claims Manager",
+        "condition": "doc.claim_amount < 20000"
+      },
+      {
+        "state": "Pending Approval",
+        "action": "Send to Finance",
+        "next_state": "Pending Finance Approval",
+        "allowed": "Claims Manager",
+        "condition": "doc.claim_amount >= 20000"
+      },
+      {
+        "state": "Pending Approval",
+        "action": "Reject",
+        "next_state": "Rejected",
+        "allowed": "Claims Manager"
+      },
+      {
+        "state": "Pending Finance Approval",
+        "action": "Finance Approve",
+        "next_state": "Approved",
+        "allowed": "Finance Manager"
+      },
+      {
+        "state": "Pending Finance Approval",
+        "action": "Reject",
+        "next_state": "Rejected",
+        "allowed": "Finance Manager"
+      }
     ]
   }
 ]
-
