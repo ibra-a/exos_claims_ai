@@ -1,6 +1,6 @@
-/* EXOS Claims — enterprise desk theme aligned with exoscorp.com
-   Brand: deep navy, bright blue accents, restrained mint highlight.
-   Goal: high-contrast, simple, modern B2B — readable in light and dark. */
+/* EXOS Claims — desk theme matched to login portal.
+   Portal: navy stage #001333, mint CTA #5fd39a, navy-on-mint text.
+   Desk: same primary/CTA language; blue kept only as secondary info accent. */
 
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
@@ -12,18 +12,20 @@ body[data-theme="light"] {
   --exos-blue-bright: #4f9dff;
   --exos-blue-light: #2f7fd4;
   --exos-mint: #5fd39a;
-  --exos-sky: #eaf4ff;
+  --exos-mint-deep: #3db87a;
+  --exos-sky: #e8f8f0;
   --exos-border: #d4e3f5;
   --exos-text: #0a1426;
   --exos-muted: #5a6c8e;
   --exos-surface: #ffffff;
   --exos-page-bg: #f3f7fc;
-  --exos-on-accent: #ffffff;
+  --exos-on-accent: #001333;
   --exos-radius: 10px;
   --exos-shadow: 0 1px 2px rgba(0, 19, 51, 0.04), 0 8px 24px rgba(0, 19, 51, 0.06);
 
-  --primary: var(--exos-blue);
-  --primary-color: var(--exos-blue);
+  /* Portal-aligned primary (mint CTA) */
+  --primary: var(--exos-mint);
+  --primary-color: var(--exos-mint);
   --bg-color: var(--exos-page-bg);
   --fg-color: var(--exos-text);
   --card-bg: var(--exos-surface);
@@ -34,24 +36,27 @@ body[data-theme="light"] {
   --text-light: var(--exos-muted);
   --sidebar-select-color: var(--exos-sky);
   --sidebar-text: var(--exos-text);
-  --link-color: var(--exos-blue);
-  --btn-primary-bg: var(--exos-blue);
+  --link-color: var(--exos-mint-deep);
+  --btn-primary-bg: var(--exos-mint);
   --btn-primary-color: var(--exos-on-accent);
+  --checkbox-color: var(--exos-mint);
+  --checkbox-gradient: linear-gradient(180deg, var(--exos-mint) -124.51%, var(--exos-mint-deep) 100%);
+  --progress-bar-bg: var(--exos-mint);
   --control-bg: var(--exos-surface);
   --control-bg-on-gray: #f8fafc;
   --navbar-bg: var(--exos-navy);
 }
 
 body[data-theme="dark"] {
-  /* Match exoscorp.com dark surfaces — blue must stay bright on navy */
   --exos-navy: #001333;
   --exos-navy-mid: #06122c;
   --exos-blue: #4f9dff;
   --exos-blue-bright: #8fd0ff;
   --exos-blue-light: #7fb8ff;
   --exos-mint: #5fd39a;
-  --exos-sky: #13294f;
-  --exos-border: rgba(124, 170, 255, 0.22);
+  --exos-mint-deep: #3db87a;
+  --exos-sky: #0f2a22;
+  --exos-border: rgba(95, 211, 154, 0.22);
   --exos-text: #eef3fb;
   --exos-muted: #9fb0d0;
   --exos-surface: #0a1426;
@@ -59,8 +64,8 @@ body[data-theme="dark"] {
   --exos-on-accent: #001333;
   --exos-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.28);
 
-  --primary: var(--exos-blue);
-  --primary-color: var(--exos-blue);
+  --primary: var(--exos-mint);
+  --primary-color: var(--exos-mint);
   --bg-color: var(--exos-page-bg);
   --fg-color: var(--exos-text);
   --card-bg: var(--exos-surface);
@@ -71,9 +76,12 @@ body[data-theme="dark"] {
   --text-light: var(--exos-muted);
   --sidebar-select-color: var(--exos-sky);
   --sidebar-text: var(--exos-text);
-  --link-color: var(--exos-blue-bright);
-  --btn-primary-bg: var(--exos-blue);
+  --link-color: var(--exos-mint);
+  --btn-primary-bg: var(--exos-mint);
   --btn-primary-color: var(--exos-on-accent);
+  --checkbox-color: var(--exos-mint);
+  --checkbox-gradient: linear-gradient(180deg, var(--exos-mint) -124.51%, var(--exos-mint-deep) 100%);
+  --progress-bar-bg: var(--exos-mint);
   --control-bg: #080f1f;
   --control-bg-on-gray: #06122c;
   --navbar-bg: #001333;
@@ -134,7 +142,11 @@ a:not(.btn) {
 }
 
 a:not(.btn):hover {
-  color: var(--exos-blue-bright) !important;
+  color: var(--exos-mint-deep) !important;
+}
+
+body[data-theme="dark"] a:not(.btn):hover {
+  color: #7ee0b0 !important;
 }
 
 body[data-theme="dark"] .form-sidebar .sidebar-menu .menu-item,
@@ -149,8 +161,10 @@ body[data-theme="dark"] .list-subject {
   opacity: 1 !important;
 }
 
-body[data-theme="dark"] .number-card-widget .number,
-body[data-theme="dark"] .btn-link,
+body[data-theme="dark"] .btn-link {
+  color: var(--exos-mint) !important;
+}
+
 body[data-theme="dark"] .indicator-pill.blue,
 body[data-theme="dark"] .indicator-pill.blue .indicator-pill-text {
   color: #8fd0ff !important;
@@ -210,13 +224,18 @@ body[data-theme="dark"] .indicator-pill.blue .indicator-pill-text {
 
 body[data-theme="dark"] .standard-sidebar-item.selected,
 body[data-theme="dark"] .desk-sidebar .sidebar-item-container.selected {
-  background: rgba(79, 157, 255, 0.16) !important;
-  box-shadow: inset 3px 0 0 #4f9dff;
+  background: rgba(95, 211, 154, 0.14) !important;
+  box-shadow: inset 3px 0 0 var(--exos-mint);
+}
+
+.standard-sidebar-item.selected,
+.desk-sidebar .sidebar-item-container.selected {
+  box-shadow: inset 3px 0 0 var(--exos-mint);
 }
 
 .form-sidebar .sidebar-menu .menu-item:hover,
 .form-sidebar .sidebar-menu .menu-item:hover a {
-  color: var(--exos-blue-bright) !important;
+  color: var(--exos-mint-deep) !important;
   background: var(--exos-sky) !important;
   border-radius: 8px;
 }
@@ -276,8 +295,8 @@ textarea:focus,
 select:focus,
 .frappe-control input:focus,
 .frappe-control textarea:focus {
-  border-color: var(--exos-blue) !important;
-  box-shadow: 0 0 0 3px rgba(79, 157, 255, 0.22) !important;
+  border-color: var(--exos-mint) !important;
+  box-shadow: 0 0 0 3px rgba(95, 211, 154, 0.28) !important;
 }
 
 /* ---------- Workspace widgets ---------- */
@@ -313,9 +332,13 @@ body[data-theme="dark"] .shortcut-widget-box {
 }
 
 .number-card-widget .number {
-  color: var(--exos-blue) !important;
+  color: var(--exos-navy) !important;
   font-weight: 800;
   letter-spacing: -0.02em;
+}
+
+body[data-theme="dark"] .number-card-widget .number {
+  color: var(--exos-mint) !important;
 }
 
 .shortcut-widget-box .widget-head .widget-title {
@@ -340,39 +363,60 @@ body[data-theme="dark"] .shortcut-widget-box {
 }
 
 body[data-theme="dark"] .list-row-container .list-row:hover {
-  background: rgba(79, 157, 255, 0.1) !important;
+  background: rgba(95, 211, 154, 0.1) !important;
 }
 
-/* ---------- Buttons ---------- */
+/* ---------- Buttons (portal mint CTA language) ---------- */
 .btn-primary,
-.btn-primary:not(:disabled) {
-  background: var(--exos-blue) !important;
-  border-color: var(--exos-blue) !important;
-  color: var(--exos-on-accent) !important;
-  font-weight: 600;
+.btn-primary:not(:disabled),
+.page-actions .btn-primary,
+.modal-actions .btn-primary,
+.std-form-layout .btn-primary {
+  background: var(--exos-mint) !important;
+  background-color: var(--exos-mint) !important;
+  border-color: var(--exos-mint) !important;
+  color: var(--exos-navy) !important;
+  font-weight: 700;
   border-radius: 8px !important;
   box-shadow: none !important;
 }
 
-body[data-theme="dark"] .btn-primary,
-body[data-theme="dark"] .btn-primary:not(:disabled) {
-  background: #4f9dff !important;
-  border-color: #4f9dff !important;
-  color: #001333 !important;
-}
-
 .btn-primary:hover,
-.btn-primary:focus {
-  background: var(--exos-blue-light) !important;
-  border-color: var(--exos-blue-light) !important;
-  filter: brightness(1.05);
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary:not(:disabled):hover,
+.btn-primary:not(:disabled):focus {
+  background: var(--exos-mint-deep) !important;
+  background-color: var(--exos-mint-deep) !important;
+  border-color: var(--exos-mint-deep) !important;
+  color: #ffffff !important;
+  filter: none;
 }
 
-body[data-theme="dark"] .btn-primary:hover,
-body[data-theme="dark"] .btn-primary:focus {
-  background: #8fd0ff !important;
-  border-color: #8fd0ff !important;
-  color: #001333 !important;
+.btn-primary:disabled,
+.btn-primary.disabled {
+  opacity: 0.55;
+}
+
+.btn-link,
+button.btn-link {
+  color: var(--exos-mint-deep) !important;
+}
+
+.btn-link:hover {
+  color: var(--exos-mint) !important;
+}
+
+/* Checkbox / switch / progress aligned to portal mint */
+input[type="checkbox"]:checked,
+.checkbox input:checked + label::before,
+.frappe-control input[type="checkbox"]:checked {
+  accent-color: var(--exos-mint);
+}
+
+.progress-bar,
+.progress .progress-bar {
+  background-color: var(--exos-mint) !important;
 }
 
 .btn-default,
@@ -385,15 +429,17 @@ body[data-theme="dark"] .btn-primary:focus {
 
 body[data-theme="dark"] .btn-default,
 body[data-theme="dark"] .btn-secondary {
-  background: rgba(143, 200, 255, 0.06) !important;
-  border-color: rgba(124, 170, 255, 0.22) !important;
+  background: rgba(95, 211, 154, 0.06) !important;
+  border-color: rgba(95, 211, 154, 0.22) !important;
   color: #eef3fb !important;
 }
 
-/* Mint accent for positive status only */
+/* Positive / status details — mint like portal accents */
 .indicator-pill.green,
 .indicator-pill.green .indicator-pill-text {
-  color: var(--exos-mint) !important;
+  color: var(--exos-mint-deep) !important;
+  background: rgba(95, 211, 154, 0.14) !important;
+  border: 1px solid rgba(95, 211, 154, 0.35);
 }
 
 .indicator-pill.blue {
@@ -404,6 +450,25 @@ body[data-theme="dark"] .btn-secondary {
 body[data-theme="dark"] .indicator-pill.blue {
   background: rgba(79, 157, 255, 0.2) !important;
   color: #8fd0ff !important;
+}
+
+/* Active filters / pills / tabs */
+.filter-x-button,
+.tag-pill,
+.form-tabs .nav-link.active {
+  border-color: rgba(95, 211, 154, 0.4) !important;
+}
+
+.form-tabs .nav-link.active {
+  color: var(--exos-mint-deep) !important;
+  border-bottom-color: var(--exos-mint) !important;
+}
+
+.page-form .btn.btn-primary-light,
+.btn-primary-light {
+  background: rgba(95, 211, 154, 0.16) !important;
+  color: var(--exos-navy) !important;
+  border-color: transparent !important;
 }
 
 /* ---------- Login — use dedicated exos_login.css via web_include_css ---------- */
