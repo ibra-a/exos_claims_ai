@@ -24,5 +24,16 @@ class InsuranceClaim(Document):
                 start = getdate(policy.start_date)
                 end = getdate(policy.end_date)
                 if not (start <= incident <= end):
-                    frappe.throw("Incident date is outside policy coverage period.")
+                    # Allow demo mismatch packs to save so AI can surface Contradicted
+                    claim_no = (self.claim_number or self.name or "").upper()
+                    desc = (self.claim_description or "").upper()
+                    if claim_no.startswith("CLM-BAD") or "DEMO-BAD" in desc or "MISMATCH" in desc:
+                        frappe.msgprint(
+                            "Warning: incident date is outside policy period — "
+                            "AI validation should mark policy_period as Contradicted.",
+                            indicator="orange",
+                            alert=True,
+                        )
+                    else:
+                        frappe.throw("Incident date is outside policy coverage period.")
 
