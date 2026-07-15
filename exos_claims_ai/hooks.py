@@ -38,3 +38,14 @@ website_context = {
 after_install = "exos_claims_ai.install.after_install"
 after_migrate = "exos_claims_ai.install.after_migrate"
 
+doc_events = {
+    "Insurance Claim": {
+        "on_update": "exos_claims_ai.api.invalidate_claim_cache",
+        "on_trash": "exos_claims_ai.api.invalidate_claim_cache",
+    },
+    "File": {
+        "after_insert": "exos_claims_ai.api.invalidate_on_file_attach",
+        "on_trash": "exos_claims_ai.api.invalidate_on_file_attach",
+    },
+}
+

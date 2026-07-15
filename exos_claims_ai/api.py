@@ -447,3 +447,46 @@ def get_approval_recommendation(claim_name: str):
         "route": route,
         "dual_approval": amount >= 20000,
     }
+
+
+def _notify_agent_invalidate(claim_number: str | None, claim_name: str | None, reason: str) -> None:
+    """Best-effort cache bust for Claims Agent snapshot."""
+    try:
+        requests.post(
+            f"{_ai_url()}/webhooks/claim-updated",
+            json={
+                "claim_number": claim_number,
+                "claim_name": claim_name,
+                "reason": reason,
+            },
+            headers=_ai_headers(),
+            timeout=5,
+        )
+    except Exception:
+        # Agent may be offline (cloud demo fallback) — ignore
+        pass
+
+
+def invalidate_claim_cache(doc, method=None):
+    """doc_events: Insurance Claim on_update / on_trash."""
+    _notify_agent_invalidate(getattr(doc, "claim_number", None), getattr(doc, "name", None), method or "update")
+
+
+def invalidate_on_file_attach(doc, method=None):
+    """doc_events: File after_insert / on_trash when attached to claim or policy."""
+    if getattr(doc, "attached_to_doctype", None) not in {"Insurance Claim", "Insurance Policy"}:
+        return
+    claim_name = None
+    claim_number = None
+    if doc.attached_to_doctype == "Insurance Claim" and doc.attached_to_name:
+        claim_name = doc.attached_to_name
+        claim_number = frappe.db.get_value("Insurance Claim", claim_name, "claim_number")
+    _notify_agent_invalidate(claim_number, claim_name, "document_attach")
+
+
+@frappe.whitelist()
+def invalidate_claim_agent_cache(claim_name: str):
+    """Manual cache invalidate from ERP (desk / middleware)."""
+    claim = frappe.get_doc("Insurance Claim", claim_name)
+    _notify_agent_invalidate(claim.claim_number, claim.name, "manual")
+    return {"ok": True, "claim_number": claim.claim_number}
