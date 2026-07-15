@@ -438,7 +438,14 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
             "page_number": 2,
             "extracted_text": "Period of insurance: 01 January 2026 to 31 December 2026.",
         }
-    if "5.2" in q or ("clause" in q and ("medical" in q or "supporting" in q)):
+    if "5.2" in q or (
+        "clause" in q
+        and (
+            "medical" in q
+            or "support" in q
+            or "which" in q
+        )
+    ):
         return {
             "answer": "Supporting clause text: Clause 5.2 — Medical expenses in UAE are covered subject to deductible.",
             "confidence": 90,
