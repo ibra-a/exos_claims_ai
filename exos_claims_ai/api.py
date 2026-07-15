@@ -1,4 +1,6 @@
 import os
+from typing import Optional
+
 import requests
 import frappe
 
@@ -257,23 +259,117 @@ def _offline_validation(claim, documents: list[str], policy: dict) -> dict:
     }
 
 
-def _offline_ask(question: str) -> dict:
+def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> dict:
     q = (question or "").lower()
+    policy = policy or {}
+    amount = float(getattr(claim, "claim_amount", None) or 0) if claim else 18500
+    claim_type = (getattr(claim, "claim_type", None) or "").lower() if claim else ""
+    details = (policy.get("coverage_details") or "").lower()
+    deductible = float(policy.get("deductible_amount") or 0)
+    is_property = claim_type == "property" or "facultative property" in details or "warehouse" in (
+        (getattr(claim, "claim_description", None) or "") if claim else ""
+    ).lower()
+    is_treaty = "quota share" in details or "treaty" in details or "cession" in (
+        (getattr(claim, "claim_description", None) or "") if claim else ""
+    ).lower()
+
+    if is_property:
+        doc = "Fac_Slip_PROP_014.pdf"
+        if "deductible" in q or "excess" in q or "priority" in q:
+            return {
+                "answer": f"Deductible / priority under the facultative property slip is AED {deductible:,.0f}.",
+                "confidence": 95,
+                "verdict": "Supported",
+                "evidence": [{"document": doc, "page": 1, "text": f"Priority / deductible AED {deductible:,.0f}."}],
+                "document_reference": doc,
+                "page_number": 1,
+                "extracted_text": f"Priority / deductible AED {deductible:,.0f}.",
+            }
+        if "covered" in q or "coverage" in q or "fire" in q:
+            return {
+                "answer": "Coverage assessment: Loss aligns with facultative property fire/allied perils (Fire, Explosion, Lightning, Aircraft) under the EXOS placement.",
+                "confidence": 94,
+                "verdict": "Supported",
+                "evidence": [
+                    {
+                        "document": doc,
+                        "page": 1,
+                        "text": "Facultative XOL — Fire, Explosion, Lightning, Aircraft. Limit AED 25,000,000.",
+                    }
+                ],
+                "document_reference": doc,
+                "page_number": 1,
+                "extracted_text": "Facultative XOL — Fire, Explosion, Lightning, Aircraft.",
+            }
+        if "approv" in q or "finance" in q or "threshold" in q:
+            route = _approval_route(amount)
+            return {
+                "answer": f"Approval routing: Amount AED {amount:,.0f} — recommended route: {route}.",
+                "confidence": 96,
+                "verdict": "Supported",
+                "evidence": [],
+                "document_reference": "Approval Rule Configuration",
+                "page_number": 0,
+                "extracted_text": "",
+            }
+        if "limit" in q:
+            lim = float(policy.get("coverage_limit") or 25000000)
+            return {
+                "answer": f"Coverage limit (AOL) is AED {lim:,.0f}; claimed amount AED {amount:,.0f} is within limit.",
+                "confidence": 94,
+                "verdict": "Supported",
+                "evidence": [{"document": "Property_Schedule.xlsx", "page": 1, "text": f"Property Damage AOL | {lim:,.0f}"}],
+                "document_reference": "Property_Schedule.xlsx",
+                "page_number": 1,
+                "extracted_text": f"Property Damage AOL {lim:,.0f}",
+            }
+
+    if is_treaty:
+        doc = "Treaty_Wording_QS_MED.pdf"
+        if "covered" in q or "cession" in q or "quota" in q or "treaty" in q:
+            return {
+                "answer": "Coverage assessment: Cession aligns with EXOS 30% medical quota-share treaty TRY-2026-MENA-QS-MED-01 (UAE/Oman, event limit AED 5,000,000).",
+                "confidence": 94,
+                "verdict": "Supported",
+                "evidence": [{"document": doc, "page": 1, "text": "30% Quota Share proportional medical treaty."}],
+                "document_reference": doc,
+                "page_number": 1,
+                "extracted_text": "30% Quota Share proportional medical treaty.",
+            }
+        if "amount" in q or "ceded" in q or "5550" in q:
+            return {
+                "answer": "Ceded amount on bordereau CES-2026-0612 is AED 5,550 (30% of original AED 18,500).",
+                "confidence": 95,
+                "verdict": "Supported",
+                "evidence": [
+                    {
+                        "document": "Bordereau_Jun2026.xlsx",
+                        "page": 1,
+                        "text": "CES-2026-0612 | CLM-001 | 18500 | 30% | 5550",
+                    }
+                ],
+                "document_reference": "Bordereau_Jun2026.xlsx",
+                "page_number": 1,
+                "extracted_text": "CES-2026-0612 ceded 5550",
+            }
+
+    # Default medical / generic pack
     if "deductible" in q or "excess" in q:
+        ded = deductible or 500
         return {
-            "answer": "Deductible: Policy deductible AED 500.",
+            "answer": f"Deductible: Policy deductible AED {ded:,.0f}.",
             "confidence": 96,
             "verdict": "Supported",
             "evidence": [
                 {
                     "document": "Policy.pdf",
                     "page": 12,
-                    "text": "Deductible amount applicable: AED 500 per claim.",
+                    "text": f"Deductible amount applicable: AED {ded:,.0f} per claim.",
                 }
             ],
             "document_reference": "Policy.pdf",
             "page_number": 12,
-            "extracted_text": "Deductible amount applicable: AED 500 per claim.",
+            "extracted_text": f"Deductible amount applicable: AED {ded:,.0f} per claim.",
         }
     if "covered" in q or "coverage" in q:
         return {
@@ -324,8 +420,9 @@ def _offline_ask(question: str) -> dict:
             "extracted_text": "Clause 5.2 — Medical expenses in UAE are covered subject to deductible.",
         }
     if "approv" in q or "finance" in q or "threshold" in q:
+        route = _approval_route(amount)
         return {
-            "answer": "Approval routing: Amount AED 18,500 < threshold AED 20,000 — standard approval: Head of Claims (Claims Manager).",
+            "answer": f"Approval routing: Amount AED {amount:,.0f} — recommended route: {route}.",
             "confidence": 95,
             "verdict": "Supported",
             "evidence": [],
@@ -448,7 +545,7 @@ def ask_claim_assistant(claim_name: str, question: str):
             return response.json()
     except Exception:
         pass
-    return _offline_ask(question)
+    return _offline_ask(question, claim=claim, policy=_policy_payload(claim.policy_number))
 
 
 @frappe.whitelist()
