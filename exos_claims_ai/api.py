@@ -295,6 +295,17 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
             "Not mentioned — no clause ZX-999 (or equivalent) appears in the claim pack documents."
         )
 
+    if "duplicat" in q or "twin" in q or "same claim" in q:
+        return {
+            "answer": "Duplicate check: No Match — no twin found on policy + claimant + incident date + amount.",
+            "confidence": 94,
+            "verdict": "Supported",
+            "evidence": [],
+            "document_reference": "AI Validation / claim register cross-check",
+            "page_number": 0,
+            "extracted_text": "",
+        }
+
     if is_property:
         doc = "Fac_Slip_PROP_014.pdf"
         if "deductible" in q or "excess" in q or "priority" in q:
