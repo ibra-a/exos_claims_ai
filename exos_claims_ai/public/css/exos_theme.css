@@ -406,51 +406,8 @@ body[data-theme="dark"] .indicator-pill.blue {
   color: #8fd0ff !important;
 }
 
-/* ---------- Login — brand first impression ---------- */
-.for-login,
-.for-forgot,
-.for-signup {
-  background:
-    radial-gradient(900px 560px at 50% 18%, rgba(79, 157, 255, 0.18), transparent 55%),
-    linear-gradient(180deg, #06122c, #001333) !important;
-}
-
-.for-login .page-card,
-.for-forgot .page-card,
-.for-signup .page-card {
-  border: 1px solid rgba(124, 170, 255, 0.18);
-  border-radius: 14px;
-  box-shadow: 0 24px 60px rgba(2, 7, 18, 0.55);
-  background: rgba(9, 16, 33, 0.96) !important;
-}
-
-.for-login .page-card-head,
-.for-forgot .page-card-head,
-.for-signup .page-card-head,
-.for-login label,
-.for-login .form-control,
-.for-login .sign-up-message,
-.for-login .forgot-password-message a {
-  color: #eef3fb !important;
-}
-
-.for-login .page-card .page-card-head .app-logo {
-  height: 56px;
-}
-
-.for-login .btn-login,
-.for-forgot .btn-primary {
-  background: #4f9dff !important;
-  border-color: #4f9dff !important;
-  color: #001333 !important;
-  font-weight: 700;
-  border-radius: 8px !important;
-}
-
-.for-login .form-control {
-  background: #080f1f !important;
-  border-color: rgba(124, 170, 255, 0.22) !important;
-}
+/* ---------- Login — use dedicated exos_login.css via web_include_css ---------- */
+/* Kept light here so desk theme doesn't fight the website portal. */
 
 /* App switcher / workspace chrome */
 .app-switcher-dropdown,
