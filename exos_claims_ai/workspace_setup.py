@@ -80,4 +80,47 @@ def ensure_workspace() -> None:
     else:
         frappe.get_doc(doc).insert(ignore_permissions=True)
 
+    ensure_desktop_icon()
     frappe.db.commit()
+
+
+def ensure_desktop_icon() -> None:
+    """v16 Desktop Icon stores its own link and does not auto-update from hooks."""
+    if not frappe.db.exists("DocType", "Desktop Icon"):
+        return
+
+    correct = "/desk/exos-claims"
+    stale = {
+        "/app/exos-claims-control-center",
+        "/desk/exos-claims-control-center",
+        "/app/exos-claims",
+        "/desk/exos-claims-control-center/",
+    }
+
+    icons = frappe.get_all(
+        "Desktop Icon",
+        filters={"app": "exos_claims_ai"},
+        fields=["name", "link"],
+    )
+    # Also catch icons created under older labels/names
+    icons += frappe.get_all(
+        "Desktop Icon",
+        filters={"name": ["like", "%EXOS%"]},
+        fields=["name", "link"],
+    )
+
+    seen = set()
+    for row in icons:
+        if row.name in seen:
+            continue
+        seen.add(row.name)
+        link = row.link or ""
+        if link != correct or link in stale or "control-center" in link:
+            frappe.db.set_value("Desktop Icon", row.name, "link", correct)
+            frappe.db.set_value("Desktop Icon", row.name, "link_type", "External")
+            frappe.db.set_value(
+                "Desktop Icon",
+                row.name,
+                "logo_url",
+                "/assets/exos_claims_ai/images/exos-logo.png",
+            )
