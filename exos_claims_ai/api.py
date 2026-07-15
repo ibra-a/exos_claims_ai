@@ -385,7 +385,8 @@ def _offline_validation(claim, documents: list[str], policy: dict) -> dict:
     missing_n = sum(1 for f in findings if f["verdict"] == "Not mentioned")
 
     if contradicted:
-        decision = "REJECTED" if contradicted >= 2 else "REVIEW"
+        # Use REVIEW (not REJECTED status) so Frappe workflow can leave Pending AI Validation
+        decision = "REVIEW"
         confidence = max(35, 78 - contradicted * 12)
         recommendation = (
             "Do not approve — resolve contradictions / missing evidence before BOA. "
@@ -815,7 +816,7 @@ def validate_claim_with_ai(claim_name: str):
     )
     validation.insert(ignore_permissions=True)
 
-    claim.status = "AI Validated" if result.get("decision") != "REJECTED" else "Rejected"
+    claim.status = "AI Validated"
     claim.ai_summary = summary
     claim.save(ignore_permissions=True)
     frappe.db.commit()
