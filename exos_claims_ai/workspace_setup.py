@@ -136,20 +136,29 @@ def ensure_desktop_icon() -> None:
 
 
 def whitelabel_desktop_icons() -> None:
-    """Desk grid: EXOS Claims + Framework + Accounting only."""
+    """Desk grid: EXOS Claims + Framework + Accounting only.
+
+    Hide ERPNext child icons too — when ERPNext is hidden, v16 otherwise
+    promotes Stock/Buying/… onto the desk as orphans.
+    """
     if not frappe.db.exists("DocType", "Desktop Icon"):
         return
 
+    keep_top = VISIBLE_DESKTOP_ICONS
+    keep_parents = {"Framework", "Accounting"}
     icons = frappe.get_all(
         "Desktop Icon",
         fields=["name", "label", "app", "hidden", "parent_icon"],
     )
     for row in icons:
-        if row.parent_icon:
-            continue
-        keep = row.name in VISIBLE_DESKTOP_ICONS or (row.label or "") in VISIBLE_DESKTOP_ICONS
-        if row.app == "exos_claims_ai" or "exos" in (row.name or "").lower():
-            keep = True
-        if row.name in ("ERPNext", "ERPNext Settings", "Home"):
-            keep = False
-        frappe.db.set_value("Desktop Icon", row.name, "hidden", 0 if keep else 1)
+        parent = row.parent_icon or ""
+        if row.name in keep_top or (row.label or "") in keep_top or row.app == "exos_claims_ai" or "exos" in (row.name or "").lower():
+            if row.name in ("ERPNext", "ERPNext Settings", "Home"):
+                hidden = 1
+            else:
+                hidden = 0
+        elif parent in keep_parents:
+            hidden = 0
+        else:
+            hidden = 1
+        frappe.db.set_value("Desktop Icon", row.name, "hidden", hidden)

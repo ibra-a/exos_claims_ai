@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Optional
 
@@ -484,10 +485,10 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
             "extracted_text": "",
         }
 
-    # Mismatch pack Copilot — surface contradictions honestly
+    # Mismatch pack Copilot — surface contradictions honestly for the same NL asks
     if is_mismatch:
         limit = float(policy.get("coverage_limit") or 250000)
-        start = policy.get("start_date")
+        start = policy.get("start_date") or "2026-01-01"
         if "covered" in q or "coverage" in q or "cosmetic" in q:
             return {
                 "answer": (
@@ -507,7 +508,26 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
                 "page_number": 12,
                 "extracted_text": "Clause 5.2 accidental hospitalisation — not elective cosmetic.",
             }
-        if "limit" in q or "amount" in q or "exceed" in q:
+        if "clause" in q or "support" in q or "decision" in q or "5.2" in q:
+            return {
+                "answer": (
+                    "No clause supports approving this claim. Clause 5.2 covers accidental hospitalisation — "
+                    "this pack is elective cosmetic, outside period, and over limit. Do not invent support."
+                ),
+                "confidence": 93,
+                "verdict": "Contradicted",
+                "evidence": [
+                    {
+                        "document": "Policy.pdf",
+                        "page": 12,
+                        "text": "Clause 5.2 — Medical expenses in UAE are covered subject to deductible (accident / hospitalisation).",
+                    }
+                ],
+                "document_reference": "Policy.pdf",
+                "page_number": 12,
+                "extracted_text": "Clause 5.2 does not support elective cosmetic / out-of-period / over-limit claims.",
+            }
+        if "limit" in q or ("amount" in q and "deduct" not in q) or "exceed" in q:
             return {
                 "answer": f"Contradicted — claimed AED {amount:,.0f} exceeds policy limit AED {limit:,.0f}.",
                 "confidence": 96,
@@ -523,7 +543,14 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
                 "page_number": 1,
                 "extracted_text": f"Limit {limit:,.0f}",
             }
-        if "period" in q or "expir" in q or "date" in q or "inception" in q:
+        if (
+            "period" in q
+            or "expir" in q
+            or "inception" in q
+            or "expired" in q
+            or ("date" in q and "incident" in q)
+            or "outside" in q
+        ):
             return {
                 "answer": (
                     f"Contradicted — incident is outside period of insurance "
@@ -542,7 +569,7 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
                 "page_number": 2,
                 "extracted_text": f"Inception {start}",
             }
-        if "approv" in q or "finance" in q or "threshold" in q:
+        if "approv" in q or "finance" in q or "threshold" in q or "route" in q or "who must" in q:
             route = _approval_route(amount)
             return {
                 "answer": (
@@ -559,7 +586,10 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
         if "deductible" in q or "excess" in q:
             ded = deductible or 500
             return {
-                "answer": f"Deductible on linked policy is AED {ded:,.0f} — but coverage/limit/period contradictions still block approval.",
+                "answer": (
+                    f"Deductible on linked policy is AED {ded:,.0f} — "
+                    "but coverage/limit/period contradictions still block approval."
+                ),
                 "confidence": 88,
                 "verdict": "Supported",
                 "evidence": [
@@ -702,9 +732,9 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
             "page_number": 12,
             "extracted_text": "Clause 5.2 — Medical expenses in UAE are covered subject to deductible.",
         }
-    if "expir" in q or "period" in q or "valid" in q:
+    if "expir" in q or "period" in q or "valid" in q or "document expired" in q:
         return {
-            "answer": "Policy period: Incident falls within 2026-01-01 to 2026-12-31.",
+            "answer": "Policy period: Incident falls within 2026-01-01 to 2026-12-31 — policy/document has not expired for this claim.",
             "confidence": 93,
             "verdict": "Supported",
             "evidence": [
@@ -724,6 +754,7 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
             "medical" in q
             or "support" in q
             or "which" in q
+            or "decision" in q
         )
     ):
         return {
@@ -826,6 +857,7 @@ def validate_claim_with_ai(claim_name: str):
 @frappe.whitelist()
 def ask_claim_assistant(claim_name: str, question: str):
     claim = frappe.get_doc("Insurance Claim", claim_name)
+    policy = _policy_payload(claim.policy_number)
     payload = {
         "claim_name": claim.name,
         "claim_number": claim.claim_number,
@@ -835,7 +867,7 @@ def ask_claim_assistant(claim_name: str, question: str):
         "claimant_name": claim.claimant_name,
         "incident_date": str(claim.incident_date) if claim.incident_date else None,
         "claim_description": claim.claim_description,
-        "policy": _policy_payload(claim.policy_number),
+        "policy": policy,
         "documents": _claim_documents(claim_name),
     }
     try:
@@ -856,7 +888,225 @@ def ask_claim_assistant(claim_name: str, question: str):
             return response.json()
     except Exception:
         pass
-    return _offline_ask(question, claim=claim, policy=_policy_payload(claim.policy_number))
+
+    # Cursor Cloud Agents (natural-language, evidence-grounded)
+    cursor_out = _cursor_grounded_ask(question, claim=claim, policy=policy)
+    if cursor_out:
+        return cursor_out
+
+    return _offline_ask(question, claim=claim, policy=policy)
+
+
+def _exos_ai_settings() -> dict:
+    """Load EXOS AI Settings single (Cursor key, model, mode)."""
+    out = {
+        "llm_mode": (frappe.conf.get("exos_llm_mode") or os.getenv("EXOS_LLM_MODE") or "cursor"),
+        "cursor_api_key": (
+            frappe.conf.get("cursor_api_key")
+            or os.getenv("CURSOR_API_KEY")
+            or ""
+        ),
+        "cursor_model": (
+            frappe.conf.get("cursor_model")
+            or os.getenv("CURSOR_MODEL")
+            or "composer-2.5"
+        ),
+    }
+    try:
+        if frappe.db.exists("DocType", "EXOS AI Settings"):
+            doc = frappe.get_single("EXOS AI Settings")
+            if doc.get("llm_mode"):
+                out["llm_mode"] = doc.llm_mode
+            if doc.get("cursor_model"):
+                out["cursor_model"] = doc.cursor_model
+            try:
+                key = doc.get_password("cursor_api_key")
+                if key:
+                    out["cursor_api_key"] = key
+            except Exception:
+                pass
+            if doc.get("ai_service_url"):
+                frappe.local.flags.exos_ai_service_url = doc.ai_service_url
+    except Exception:
+        pass
+    return out
+
+
+def _cursor_grounded_ask(question: str, claim=None, policy: Optional[dict] = None) -> Optional[dict]:
+    """Call Cursor Cloud Agents API (no-repo) for NL Copilot answers."""
+    import base64
+    import re
+    import time
+
+    settings = _exos_ai_settings()
+    mode = (settings.get("llm_mode") or "off").lower()
+    if mode in {"off", "0", "false", "disabled"}:
+        return None
+    api_key = (settings.get("cursor_api_key") or "").strip()
+    if not api_key:
+        return None
+
+    policy = policy or {}
+    docs = _claim_documents(claim.name) if claim else []
+    facts = {
+        "claim_number": getattr(claim, "claim_number", None),
+        "claim_type": getattr(claim, "claim_type", None),
+        "claimant_name": getattr(claim, "claimant_name", None),
+        "incident_date": str(getattr(claim, "incident_date", None) or ""),
+        "claim_amount": getattr(claim, "claim_amount", None),
+        "claim_description": (getattr(claim, "claim_description", None) or "")[:600],
+        "policy_number": getattr(claim, "policy_number", None),
+        "policy_start": policy.get("start_date"),
+        "policy_end": policy.get("end_date"),
+        "coverage_limit": policy.get("coverage_limit"),
+        "deductible_amount": policy.get("deductible_amount"),
+        "coverage_details": (policy.get("coverage_details") or "")[:400],
+        "exclusions": (policy.get("exclusions") or "")[:400],
+        "documents": ", ".join(docs[:12]),
+    }
+    evidence = [
+        {
+            "document": "Policy.pdf",
+            "page": 2,
+            "text": f"Period of insurance: {policy.get('start_date')} to {policy.get('end_date')}.",
+        },
+        {
+            "document": "Policy.pdf",
+            "page": 12,
+            "text": (policy.get("coverage_details") or "Coverage terms")[:300],
+        },
+        {
+            "document": "Coverage_Schedule.xlsx",
+            "page": 1,
+            "text": f"Limit AED {policy.get('coverage_limit')}; deductible AED {policy.get('deductible_amount')}.",
+        },
+        {
+            "document": "Policy.pdf",
+            "page": 18,
+            "text": (policy.get("exclusions") or "Exclusions")[:300],
+        },
+        {
+            "document": "Claim",
+            "page": 1,
+            "text": (getattr(claim, "claim_description", None) or "")[:400],
+        },
+    ]
+
+    system = (
+        "You are EXOS Claims Copilot — evidence-grounded only. "
+        "Answer ONLY from CLAIM FACTS and EVIDENCE. Never invent. "
+        "verdict must be Supported | Contradicted | Not mentioned. "
+        "Respond with ONE JSON object only, no markdown: "
+        '{"answer":"...","verdict":"...","confidence":0-100,'
+        '"document_reference":"... or null","page_number":number or null,'
+        '"extracted_text":"short quote or null"}'
+    )
+    facts_lines = "\n".join(f"- {k}: {v}" for k, v in facts.items() if v not in (None, ""))
+    ev_lines = "\n".join(
+        f"{i}. doc={e['document']} page={e['page']} text={e['text'][:400]}"
+        for i, e in enumerate(evidence, 1)
+    )
+    prompt = f"{system}\n\nCLAIM FACTS:\n{facts_lines}\n\nEVIDENCE:\n{ev_lines}\n\nQUESTION: {question}\n"
+
+    token = base64.b64encode(f"{api_key}:".encode()).decode()
+    headers = {"Authorization": f"Basic {token}", "Content-Type": "application/json"}
+    model = settings.get("cursor_model") or "composer-2.5"
+    try:
+        create = requests.post(
+            "https://api.cursor.com/v1/agents",
+            headers=headers,
+            json={
+                "prompt": {"text": prompt},
+                "name": f"EXOS Copilot {facts.get('claim_number') or ''}".strip()[:80],
+                "model": {"id": model},
+            },
+            timeout=30,
+        )
+        if create.status_code >= 400:
+            frappe.log_error(create.text[:500], "EXOS Cursor create failed")
+            return None
+        body = create.json()
+    except Exception as exc:
+        frappe.log_error(str(exc)[:500], "EXOS Cursor create exception")
+        return None
+
+    agent = body.get("agent") or body
+    run = body.get("run") or {}
+    agent_id = agent.get("id") or body.get("id")
+    run_id = run.get("id") or agent.get("latestRunId") or body.get("latestRunId")
+    if not agent_id or not run_id:
+        return None
+
+    result_text = ""
+    deadline = time.time() + 90
+    while time.time() < deadline:
+        try:
+            resp = requests.get(
+                f"https://api.cursor.com/v1/agents/{agent_id}/runs/{run_id}",
+                headers=headers,
+                timeout=20,
+            )
+            if resp.status_code >= 400:
+                break
+            data = resp.json()
+            status = (data.get("status") or "").upper()
+            if status in {"FINISHED", "COMPLETED", "SUCCESS"}:
+                result_text = data.get("result") or ""
+                break
+            if status in {"ERROR", "FAILED", "CANCELLED", "CANCELED"}:
+                return None
+        except Exception:
+            break
+        time.sleep(2)
+
+    try:
+        requests.post(
+            f"https://api.cursor.com/v1/agents/{agent_id}/archive",
+            headers=headers,
+            timeout=10,
+        )
+    except Exception:
+        pass
+
+    raw = (result_text or "").strip()
+    if raw.startswith("```"):
+        raw = re.sub(r"^```(?:json)?\s*", "", raw)
+        raw = re.sub(r"\s*```$", "", raw)
+    parsed = None
+    try:
+        parsed = json.loads(raw)
+    except Exception:
+        match = re.search(r"\{[\s\S]*\}", raw)
+        if match:
+            try:
+                parsed = json.loads(match.group(0))
+            except Exception:
+                parsed = None
+    if not parsed:
+        return None
+
+    verdict = str(parsed.get("verdict") or "Not mentioned").strip()
+    if verdict not in {"Supported", "Contradicted", "Not mentioned"}:
+        verdict = "Not mentioned"
+    try:
+        conf = int(parsed.get("confidence") or 70)
+    except (TypeError, ValueError):
+        conf = 50
+    answer = (parsed.get("answer") or "").strip()
+    if not answer:
+        return None
+    return {
+        "answer": answer,
+        "confidence": max(0, min(100, conf)),
+        "verdict": verdict,
+        "evidence": evidence[:3] if verdict != "Not mentioned" else [],
+        "document_reference": parsed.get("document_reference"),
+        "page_number": parsed.get("page_number"),
+        "extracted_text": parsed.get("extracted_text"),
+        "question": question,
+        "mode": "cursor-cloud",
+        "model": model,
+    }
 
 
 @frappe.whitelist()
