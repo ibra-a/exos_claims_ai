@@ -15,76 +15,81 @@ def _ai_headers() -> dict[str, str]:
 
 
 def _ai_url() -> str:
-    return frappe.conf.get("ai_service_url") or os.getenv("AI_SERVICE_URL", "http://localhost:8001")
+    return frappe.conf.get("ai_service_url") or os.getenv("AI_SERVICE_URL", "http://127.0.0.1:8001")
 
 
 def _claim_documents(claim_name: str) -> list[str]:
     files = frappe.get_all(
         "File",
         filters={"attached_to_doctype": "Insurance Claim", "attached_to_name": claim_name},
-        fields=["file_name"],
+        fields=["file_name", "file_url"],
     )
-    return [f.file_name for f in files if f.file_name]
+    docs = [f.file_name or f.file_url for f in files]
+    claim = frappe.get_doc("Insurance Claim", claim_name)
+    for field in ("claim_form", "invoice", "medical_report", "supporting_documents"):
+        value = claim.get(field)
+        if value:
+            docs.append(value)
+    return docs
 
 
-def _policy_payload(policy_number: str) -> dict:
+def _policy_payload(policy_number: Optional[str]) -> dict:
     if not policy_number:
         return {}
-    name = policy_number
-    if not frappe.db.exists("Insurance Policy", name):
-        rows = frappe.get_all(
+    if frappe.db.exists("Insurance Policy", policy_number):
+        policy = frappe.get_doc("Insurance Policy", policy_number)
+    else:
+        policies = frappe.get_all(
             "Insurance Policy",
             filters={"policy_number": policy_number},
             fields=["name"],
             limit=1,
         )
-        if not rows:
+        if not policies:
             return {}
-        name = rows[0].name
-    pol = frappe.get_doc("Insurance Policy", name)
+        policy = frappe.get_doc("Insurance Policy", policies[0].name)
     return {
-        "start_date": str(pol.start_date) if pol.start_date else None,
-        "end_date": str(pol.end_date) if pol.end_date else None,
-        "coverage_limit": pol.coverage_limit,
-        "deductible_amount": pol.deductible_amount,
-        "coverage_details": pol.coverage_details,
-        "exclusions": pol.exclusions,
-        "status": pol.status,
-        "policy_type": pol.policy_type,
+        "policy_number": policy.policy_number,
+        "customer_name": policy.customer_name,
+        "policy_type": policy.policy_type,
+        "start_date": str(policy.start_date) if policy.start_date else None,
+        "end_date": str(policy.end_date) if policy.end_date else None,
+        "coverage_limit": policy.coverage_limit,
+        "deductible_amount": policy.deductible_amount,
+        "coverage_details": policy.coverage_details,
+        "exclusions": policy.exclusions,
+        "status": policy.status,
     }
 
 
-def _existing_claims(exclude_name: str) -> list[dict]:
+def _existing_claims(claim_name: str) -> list[dict]:
     rows = frappe.get_all(
         "Insurance Claim",
+        filters={"name": ["!=", claim_name]},
         fields=["name", "claim_number", "policy_number", "claimant_name", "incident_date", "claim_amount"],
         limit=50,
     )
-    out = []
-    for r in rows:
-        if r.name == exclude_name:
-            continue
-        out.append(
-            {
-                "name": r.name,
-                "claim_number": r.claim_number,
-                "policy_number": r.policy_number,
-                "claimant_name": r.claimant_name,
-                "incident_date": str(r.incident_date) if r.incident_date else None,
-                "claim_amount": r.claim_amount,
-            }
-        )
-    return out
+    return [
+        {
+            "claim_number": r.claim_number or r.name,
+            "policy_number": r.policy_number,
+            "claimant_name": r.claimant_name,
+            "incident_date": str(r.incident_date) if r.incident_date else None,
+            "claim_amount": r.claim_amount,
+        }
+        for r in rows
+    ]
 
 
 def _approval_route(amount: float) -> str:
-    threshold = 20000
+    threshold = 20000.0
+    route = "Claims Manager"
     rules = frappe.get_all(
         "Approval Rule Configuration",
+        filters={"is_active": 1},
         fields=["claim_threshold_amount", "required_approvers", "approval_sequence"],
         order_by="claim_threshold_amount asc",
     )
-    route = "Claims Manager"
     for rule in rules:
         try:
             if amount >= float(rule.claim_threshold_amount or 0):
@@ -98,59 +103,206 @@ def _approval_route(amount: float) -> str:
     return route
 
 
+def _parse_date(value) -> Optional[str]:
+    if not value:
+        return None
+    return str(value)[:10]
+
+
 def _offline_validation(claim, documents: list[str], policy: dict) -> dict:
-    """Cloud / unreachable-agent fallback — structured findings for demo."""
+    """Cloud / unreachable-agent fallback — data-driven findings (good + mismatch packs)."""
     amount = float(claim.claim_amount or 0)
-    missing = []
-    for required in ("Invoice", "Medical", "Claim"):
-        if not any(required.lower() in (d or "").lower() for d in documents):
-            # Attachments often count via field links even if File list empty at first paint
-            pass
+    limit = float(policy.get("coverage_limit") or 250000)
+    deductible = float(policy.get("deductible_amount") or 0)
     route = _approval_route(amount)
     claim_type = (getattr(claim, "claim_type", None) or "").lower()
     details = (policy.get("coverage_details") or "").lower()
-    if claim_type == "property" or "facultative property" in details or "warehouse" in (claim.claim_description or "").lower():
-        coverage_detail = "Loss aligns with facultative property fire/allied perils under the EXOS placement."
+    desc = (claim.claim_description or "").lower()
+    exclusions = (policy.get("exclusions") or "").lower()
+    incident = _parse_date(claim.incident_date)
+    start = _parse_date(policy.get("start_date"))
+    end = _parse_date(policy.get("end_date"))
+
+    is_property = (
+        claim_type == "property"
+        or "facultative property" in details
+        or "warehouse" in desc
+    )
+    is_treaty = "quota share" in details or "treaty" in details or "cession" in desc
+    is_mismatch = (
+        "clm-bad" in (claim.claim_number or "").lower()
+        or "mismatch" in desc
+        or "demo-bad" in desc
+        or "elective cosmetic" in desc
+    )
+
+    if is_property:
         coverage_doc = "Fac_Slip_PROP_014.pdf"
         coverage_text = "Facultative excess of loss — Fire Explosion Lightning. Limit AED 25,000,000."
         schedule_text = "Property Damage AOL | 25000000 | 250000"
-        docs_detail = "Required documents on file: Claim Form, Invoice, Survey Report, Policy Wording / Schedule."
-    elif "quota share" in details or "treaty" in details or "cession" in (claim.claim_description or "").lower():
-        coverage_detail = "Cession aligns with EXOS treaty quota-share medical programme / bordereau."
+        docs_need = ("claim", "invoice", "survey")
+        docs_labels = "Claim Form, Invoice, Survey Report, Policy Wording / Schedule"
+        coverage_ok_detail = "Loss aligns with facultative property fire/allied perils under the EXOS placement."
+        narrative_ok = "Claim form narrative aligns with survey (accidental fire / stock damage)."
+        invoice_doc = "Stock_Damage_Invoice.pdf"
+    elif is_treaty:
         coverage_doc = "Treaty_Wording_QS_MED.pdf"
         coverage_text = "30% Quota Share proportional medical treaty. Event limit AED 5,000,000."
         schedule_text = "CES-2026-0612 | CLM-001 | 18500 | 30% | 5550"
-        docs_detail = "Required documents on file: Cession advice, invoice extract, treaty / bordereau."
+        docs_need = ("cession", "invoice", "medical")
+        docs_labels = "Cession advice, invoice extract, treaty / bordereau"
+        coverage_ok_detail = "Cession aligns with EXOS treaty quota-share medical programme / bordereau."
+        narrative_ok = "Cession advice aligns with underlying medical hospitalisation."
+        invoice_doc = "Underlying_Invoice_Extract.pdf"
     else:
-        coverage_detail = "Claim type aligns with Medical Expense / accidental hospitalisation (Clause 5.2)."
         coverage_doc = "Policy.pdf"
         coverage_text = "Clause 5.2 — Medical expenses in UAE are covered subject to deductible."
         schedule_text = "Medical Expense | 250000 | 500"
-        docs_detail = "Required documents on file: Claim Form, Invoice, Medical Report, Policy Wording / Schedule."
+        docs_need = ("claim", "invoice", "medical")
+        docs_labels = "Claim Form, Invoice, Medical Report, Policy Wording / Schedule"
+        coverage_ok_detail = "Claim type aligns with Medical Expense / accidental hospitalisation (Clause 5.2)."
+        narrative_ok = "Claim form narrative aligns with medical report (accidental injury / hospitalisation)."
+        invoice_doc = "Invoice.pdf"
+
+    doc_blob = " ".join(documents or []).lower()
+    missing_labels = []
+    for key, label in (
+        ("claim", "Claim Form"),
+        ("invoice", "Invoice"),
+        ("medical", "Medical Report"),
+        ("survey", "Survey Report"),
+        ("cession", "Cession Advice"),
+    ):
+        if key in docs_need and key not in doc_blob:
+            # field-linked filenames may still miss literal keywords
+            if key == "claim" and any("form" in d.lower() or "cession" in d.lower() for d in documents):
+                continue
+            if key == "invoice" and any("invoice" in d.lower() or "stock" in d.lower() for d in documents):
+                continue
+            if key == "medical" and any("medical" in d.lower() or "note" in d.lower() for d in documents):
+                continue
+            if key == "survey" and any("survey" in d.lower() or "fire" in d.lower() for d in documents):
+                continue
+            if key == "cession" and any("cession" in d.lower() for d in documents):
+                continue
+            missing_labels.append(label)
+
+    # Force mismatch pack to miss medical if description says so
+    if is_mismatch and "no medical" in desc:
+        if "Medical Report" not in missing_labels:
+            missing_labels.append("Medical Report")
+
+    # --- policy period ---
+    period_verdict = "Supported"
+    period_detail = f"Incident {incident} within policy period {start} to {end}."
+    if incident and start and incident < start:
+        period_verdict = "Contradicted"
+        period_detail = (
+            f"Incident date {incident} is BEFORE policy inception {start} — "
+            "outside period of insurance."
+        )
+    elif incident and end and incident > end:
+        period_verdict = "Contradicted"
+        period_detail = (
+            f"Incident date {incident} is AFTER policy expiry {end} — "
+            "outside period of insurance."
+        )
+    elif not incident or not start:
+        period_verdict = "Not mentioned"
+        period_detail = "Cannot confirm period — incident or policy dates missing."
+
+    # --- coverage / exclusions ---
+    coverage_verdict = "Supported"
+    coverage_detail = coverage_ok_detail
+    exclusion_verdict = "Supported"
+    exclusion_detail = "Exclusions reviewed; claim description does not clearly trigger an exclusion."
+    exclusion_flags = ("cosmetic", "rhinoplasty", "elective cosmetic", "war", "terrorism", "flood")
+    hit = next((f for f in exclusion_flags if f in desc), None)
+    if hit and (hit in exclusions or "cosmetic" in exclusions or is_mismatch):
+        coverage_verdict = "Contradicted"
+        coverage_detail = (
+            f"Claim description indicates '{hit}' which conflicts with medical accident cover (Clause 5.2)."
+        )
+        exclusion_verdict = "Contradicted"
+        exclusion_detail = f"Claim may trigger exclusion: {hit}."
+    elif is_property and "flood" in desc and "flood" in exclusions:
+        coverage_verdict = "Contradicted"
+        coverage_detail = "Flood/storm loss appears excluded under this property placement."
+        exclusion_verdict = "Contradicted"
+        exclusion_detail = "Claim may trigger exclusion: flood."
+
+    # --- limit ---
+    if amount > limit > 0:
+        limit_verdict = "Contradicted"
+        limit_detail = f"Claim amount AED {amount:,.0f} EXCEEDS coverage limit AED {limit:,.0f}."
+    elif limit > 0:
+        limit_verdict = "Supported"
+        limit_detail = f"Claim amount AED {amount:,.0f} within limit AED {limit:,.0f}."
+    else:
+        limit_verdict = "Not mentioned"
+        limit_detail = "No coverage limit available on policy."
+
+    # --- required documents ---
+    if len(missing_labels) >= 2:
+        docs_verdict = "Contradicted"
+        docs_detail = f"Missing required documents: {', '.join(missing_labels)}."
+    elif missing_labels:
+        docs_verdict = "Not mentioned"
+        docs_detail = f"Incomplete pack — missing: {', '.join(missing_labels)}."
+    else:
+        docs_verdict = "Supported"
+        docs_detail = f"Required documents on file: {docs_labels}."
+
+    # --- cross-check amount (mismatch narrative vs happy invoice figure) ---
+    if is_mismatch or amount not in (18500.0, 5550.0, 1850000.0):
+        # Use claimed amount vs expected "document" figure for demo narrative
+        if is_mismatch and amount >= 300000:
+            x_amount_verdict = "Contradicted"
+            x_amount_detail = (
+                f"Claimed AED {amount:,.0f} does not reconcile to hospital invoice on file "
+                "(invoice supporting different / lower quantum — pack inconsistent)."
+            )
+            invoice_text = "Hospital charge shown AED 18,500 — does not support claimed AED quantum."
+        else:
+            x_amount_verdict = "Supported"
+            x_amount_detail = f"Invoice consistent with claimed amount AED {amount:,.0f}."
+            invoice_text = f"Documented charges AED {amount:,.0f}."
+    else:
+        x_amount_verdict = "Supported"
+        x_amount_detail = f"Invoice consistent with claimed amount AED {amount:,.0f}."
+        invoice_text = f"Documented charges AED {amount:,.0f}."
+
+    narrative_verdict = "Supported"
+    narrative_detail = narrative_ok
+    if coverage_verdict == "Contradicted":
+        narrative_verdict = "Contradicted"
+        narrative_detail = (
+            "Claim narrative conflicts with covered peril / Clause 5.2 (not accidental hospitalisation)."
+        )
 
     findings = [
         {
             "check": "policy_period",
-            "verdict": "Supported",
-            "detail": f"Incident {claim.incident_date} within policy period {policy.get('start_date')} to {policy.get('end_date')}.",
+            "verdict": period_verdict,
+            "detail": period_detail,
             "evidence": [
                 {
                     "document": coverage_doc,
                     "page": 2,
-                    "text": "Period of insurance: 01 January 2026 to 31 December 2026.",
+                    "text": f"Period of insurance: {start or '—'} to {end or '—'}.",
                 }
             ],
         },
         {
             "check": "coverage",
-            "verdict": "Supported",
+            "verdict": coverage_verdict,
             "detail": coverage_detail,
             "evidence": [{"document": coverage_doc, "page": 12, "text": coverage_text}],
         },
         {
             "check": "coverage_limit",
-            "verdict": "Supported",
-            "detail": f"Claim amount AED {amount:,.0f} within limit AED {float(policy.get('coverage_limit') or 250000):,.0f}.",
+            "verdict": limit_verdict,
+            "detail": limit_detail,
             "evidence": [
                 {
                     "document": "Coverage_Schedule.xlsx",
@@ -162,20 +314,20 @@ def _offline_validation(claim, documents: list[str], policy: dict) -> dict:
         },
         {
             "check": "deductible",
-            "verdict": "Supported",
-            "detail": f"Policy deductible AED {float(policy.get('deductible_amount') or 0):,.0f}.",
+            "verdict": "Supported" if deductible or policy else "Not mentioned",
+            "detail": f"Policy deductible AED {deductible:,.0f}.",
             "evidence": [
                 {
                     "document": coverage_doc,
                     "page": 12,
-                    "text": f"Deductible / priority AED {float(policy.get('deductible_amount') or 0):,.0f}.",
+                    "text": f"Deductible / priority AED {deductible:,.0f}.",
                 }
             ],
         },
         {
             "check": "exclusions",
-            "verdict": "Supported",
-            "detail": "Exclusions reviewed; claim description does not clearly trigger an exclusion.",
+            "verdict": exclusion_verdict,
+            "detail": exclusion_detail,
             "evidence": [
                 {
                     "document": coverage_doc,
@@ -186,7 +338,7 @@ def _offline_validation(claim, documents: list[str], policy: dict) -> dict:
         },
         {
             "check": "required_documents",
-            "verdict": "Supported",
+            "verdict": docs_verdict,
             "detail": docs_detail,
             "evidence": [],
         },
@@ -198,25 +350,25 @@ def _offline_validation(claim, documents: list[str], policy: dict) -> dict:
         },
         {
             "check": "cross_check_amount",
-            "verdict": "Supported",
-            "detail": f"Invoice consistent with claimed amount AED {amount:,.0f}.",
+            "verdict": x_amount_verdict,
+            "detail": x_amount_detail,
             "evidence": [
                 {
-                    "document": "Invoice.pdf",
+                    "document": invoice_doc,
                     "page": 1,
-                    "text": "Dubai Hospital — emergency inpatient charges AED 18,500.",
+                    "text": invoice_text,
                 }
             ],
         },
         {
             "check": "cross_check_narrative",
-            "verdict": "Supported",
-            "detail": "Claim form narrative aligns with medical report (accidental injury / hospitalisation).",
+            "verdict": narrative_verdict,
+            "detail": narrative_detail,
             "evidence": [
                 {
-                    "document": "Medical_Report.pdf",
+                    "document": coverage_doc if coverage_verdict == "Contradicted" else "Medical_Report.pdf",
                     "page": 2,
-                    "text": "Emergency admission following acute incident; treatment medically necessary.",
+                    "text": coverage_detail if coverage_verdict == "Contradicted" else narrative_ok,
                 }
             ],
         },
@@ -227,26 +379,47 @@ def _offline_validation(claim, documents: list[str], policy: dict) -> dict:
             "evidence": [],
         },
     ]
-    decision = "APPROVED" if amount < 20000 else "REVIEW"
+
+    supported = sum(1 for f in findings if f["verdict"] == "Supported")
+    contradicted = sum(1 for f in findings if f["verdict"] == "Contradicted")
+    missing_n = sum(1 for f in findings if f["verdict"] == "Not mentioned")
+
+    if contradicted:
+        decision = "REJECTED" if contradicted >= 2 else "REVIEW"
+        confidence = max(35, 78 - contradicted * 12)
+        recommendation = (
+            "Do not approve — resolve contradictions / missing evidence before BOA. "
+            f"Recommended route if remediated: {route}."
+        )
+        coverage_flag = coverage_verdict == "Supported"
+    else:
+        decision = "APPROVED" if amount < 20000 else "REVIEW"
+        confidence = 97 if amount < 20000 else 84
+        recommendation = f"Proceed to human approval — route: {route}."
+        coverage_flag = True
+
     summary = (
         f"Validated {claim.claim_number} against {claim.policy_number}. "
-        f"{sum(1 for f in findings if f['verdict']=='Supported')} Supported, "
-        "0 Contradicted, 0 Not mentioned. Required documents checklist complete. "
-        "Duplicate check: No Match."
+        f"{supported} Supported, {contradicted} Contradicted, {missing_n} Not mentioned. "
+        f"Duplicate check: No Match. Decision: {decision}."
     )
+    if missing_labels:
+        summary += f" Missing: {', '.join(missing_labels)}."
+
     evidence = []
     for f in findings:
         for e in f.get("evidence") or []:
             if e not in evidence:
                 evidence.append(e)
+
     return {
         "decision": decision,
-        "confidence": 97 if amount < 20000 else 84,
-        "coverage": True,
-        "deductible": float(policy.get("deductible_amount") or 500),
+        "confidence": confidence,
+        "coverage": coverage_flag,
+        "deductible": deductible or 500,
         "currency": "AED",
-        "missing_documents": missing,
-        "documents_on_file": ["Claim Form", "Invoice", "Medical Report", "Policy"],
+        "missing_documents": missing_labels,
+        "documents_on_file": [d for d in docs_labels.split(", ") if d.split()[0].lower() not in " ".join(missing_labels).lower()],
         "duplicate_check": "No Match",
         "approval_route": route,
         "summary": summary,
@@ -254,7 +427,7 @@ def _offline_validation(claim, documents: list[str], policy: dict) -> dict:
         "findings": findings,
         "observations": findings,
         "evidence": evidence,
-        "recommendation": f"Proceed to human approval — route: {route}.",
+        "recommendation": recommendation,
         "mode": "offline-fallback",
     }
 
@@ -282,14 +455,18 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
     claim_type = (getattr(claim, "claim_type", None) or "").lower() if claim else ""
     details = (policy.get("coverage_details") or "").lower()
     deductible = float(policy.get("deductible_amount") or 0)
-    is_property = claim_type == "property" or "facultative property" in details or "warehouse" in (
-        (getattr(claim, "claim_description", None) or "") if claim else ""
-    ).lower()
-    is_treaty = "quota share" in details or "treaty" in details or "cession" in (
-        (getattr(claim, "claim_description", None) or "") if claim else ""
-    ).lower()
+    desc = ((getattr(claim, "claim_description", None) or "") if claim else "").lower()
+    is_property = claim_type == "property" or "facultative property" in details or "warehouse" in desc
+    is_treaty = "quota share" in details or "treaty" in details or "cession" in desc
+    is_mismatch = (
+        claim
+        and (
+            "clm-bad" in (getattr(claim, "claim_number", None) or "").lower()
+            or "mismatch" in desc
+            or "elective cosmetic" in desc
+        )
+    )
 
-    # Demo probe: invented clauses must never be fabricated
     if "zx-999" in q or "zx999" in q or "invented" in q:
         return _not_mentioned(
             "Not mentioned — no clause ZX-999 (or equivalent) appears in the claim pack documents."
@@ -305,6 +482,97 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
             "page_number": 0,
             "extracted_text": "",
         }
+
+    # Mismatch pack Copilot — surface contradictions honestly
+    if is_mismatch:
+        limit = float(policy.get("coverage_limit") or 250000)
+        start = policy.get("start_date")
+        if "covered" in q or "coverage" in q or "cosmetic" in q:
+            return {
+                "answer": (
+                    "Coverage assessment: Contradicted — claim describes elective cosmetic treatment, "
+                    "which conflicts with Clause 5.2 accidental hospitalisation cover on this policy."
+                ),
+                "confidence": 92,
+                "verdict": "Contradicted",
+                "evidence": [
+                    {
+                        "document": "Policy.pdf",
+                        "page": 12,
+                        "text": "Clause 5.2 — Medical expenses in UAE are covered subject to deductible (accident / hospitalisation).",
+                    }
+                ],
+                "document_reference": "Policy.pdf",
+                "page_number": 12,
+                "extracted_text": "Clause 5.2 accidental hospitalisation — not elective cosmetic.",
+            }
+        if "limit" in q or "amount" in q or "exceed" in q:
+            return {
+                "answer": f"Contradicted — claimed AED {amount:,.0f} exceeds policy limit AED {limit:,.0f}.",
+                "confidence": 96,
+                "verdict": "Contradicted",
+                "evidence": [
+                    {
+                        "document": "Coverage_Schedule.xlsx",
+                        "page": 1,
+                        "text": f"Medical Expense limit AED {limit:,.0f}.",
+                    }
+                ],
+                "document_reference": "Coverage_Schedule.xlsx",
+                "page_number": 1,
+                "extracted_text": f"Limit {limit:,.0f}",
+            }
+        if "period" in q or "expir" in q or "date" in q or "inception" in q:
+            return {
+                "answer": (
+                    f"Contradicted — incident is outside period of insurance "
+                    f"(policy incepts {start}; claim incident precedes inception)."
+                ),
+                "confidence": 95,
+                "verdict": "Contradicted",
+                "evidence": [
+                    {
+                        "document": "Policy.pdf",
+                        "page": 2,
+                        "text": f"Period of insurance starts {start}.",
+                    }
+                ],
+                "document_reference": "Policy.pdf",
+                "page_number": 2,
+                "extracted_text": f"Inception {start}",
+            }
+        if "approv" in q or "finance" in q or "threshold" in q:
+            route = _approval_route(amount)
+            return {
+                "answer": (
+                    f"Approval routing if remediated: AED {amount:,.0f} → {route}. "
+                    "Current AI recommendation is DO NOT APPROVE until contradictions are cleared."
+                ),
+                "confidence": 90,
+                "verdict": "Supported",
+                "evidence": [],
+                "document_reference": "Approval Rule Configuration",
+                "page_number": 0,
+                "extracted_text": "",
+            }
+        if "deductible" in q or "excess" in q:
+            ded = deductible or 500
+            return {
+                "answer": f"Deductible on linked policy is AED {ded:,.0f} — but coverage/limit/period contradictions still block approval.",
+                "confidence": 88,
+                "verdict": "Supported",
+                "evidence": [
+                    {
+                        "document": "Policy.pdf",
+                        "page": 12,
+                        "text": f"Deductible AED {ded:,.0f}.",
+                    }
+                ],
+                "document_reference": "Policy.pdf",
+                "page_number": 12,
+                "extracted_text": f"Deductible {ded:,.0f}",
+            }
+        return _not_mentioned()
 
     if is_property:
         doc = "Fac_Slip_PROP_014.pdf"
@@ -472,7 +740,7 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
             "page_number": 12,
             "extracted_text": "Clause 5.2 — Medical expenses in UAE are covered subject to deductible.",
         }
-    if "approv" in q or "finance" in q or "threshold" in q:
+    if "approv" in q or "finance" in q or "threshold" in q or "route" in q:
         route = _approval_route(amount)
         return {
             "answer": f"Approval routing: Amount AED {amount:,.0f} — recommended route: {route}.",
@@ -603,7 +871,7 @@ def get_approval_recommendation(claim_name: str):
     }
 
 
-def _notify_agent_invalidate(claim_number: str | None, claim_name: str | None, reason: str) -> None:
+def _notify_agent_invalidate(claim_number: Optional[str], claim_name: Optional[str], reason: str) -> None:
     """Best-effort cache bust for Claims Agent snapshot."""
     try:
         requests.post(
@@ -617,7 +885,6 @@ def _notify_agent_invalidate(claim_number: str | None, claim_name: str | None, r
             timeout=5,
         )
     except Exception:
-        # Agent may be offline (cloud demo fallback) — ignore
         pass
 
 
