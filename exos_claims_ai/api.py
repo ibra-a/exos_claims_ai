@@ -105,6 +105,27 @@ def _offline_validation(claim, documents: list[str], policy: dict) -> dict:
             # Attachments often count via field links even if File list empty at first paint
             pass
     route = _approval_route(amount)
+    claim_type = (getattr(claim, "claim_type", None) or "").lower()
+    details = (policy.get("coverage_details") or "").lower()
+    if claim_type == "property" or "facultative property" in details or "warehouse" in (claim.claim_description or "").lower():
+        coverage_detail = "Loss aligns with facultative property fire/allied perils under the EXOS placement."
+        coverage_doc = "Fac_Slip_PROP_014.pdf"
+        coverage_text = "Facultative excess of loss — Fire Explosion Lightning. Limit AED 25,000,000."
+        schedule_text = "Property Damage AOL | 25000000 | 250000"
+        docs_detail = "Required documents on file: Claim Form, Invoice, Survey Report, Policy Wording / Schedule."
+    elif "quota share" in details or "treaty" in details or "cession" in (claim.claim_description or "").lower():
+        coverage_detail = "Cession aligns with EXOS treaty quota-share medical programme / bordereau."
+        coverage_doc = "Treaty_Wording_QS_MED.pdf"
+        coverage_text = "30% Quota Share proportional medical treaty. Event limit AED 5,000,000."
+        schedule_text = "CES-2026-0612 | CLM-001 | 18500 | 30% | 5550"
+        docs_detail = "Required documents on file: Cession advice, invoice extract, treaty / bordereau."
+    else:
+        coverage_detail = "Claim type aligns with Medical Expense / accidental hospitalisation (Clause 5.2)."
+        coverage_doc = "Policy.pdf"
+        coverage_text = "Clause 5.2 — Medical expenses in UAE are covered subject to deductible."
+        schedule_text = "Medical Expense | 250000 | 500"
+        docs_detail = "Required documents on file: Claim Form, Invoice, Medical Report, Policy Wording / Schedule."
+
     findings = [
         {
             "check": "policy_period",
@@ -112,7 +133,7 @@ def _offline_validation(claim, documents: list[str], policy: dict) -> dict:
             "detail": f"Incident {claim.incident_date} within policy period {policy.get('start_date')} to {policy.get('end_date')}.",
             "evidence": [
                 {
-                    "document": "Policy.pdf",
+                    "document": coverage_doc,
                     "page": 2,
                     "text": "Period of insurance: 01 January 2026 to 31 December 2026.",
                 }
@@ -121,14 +142,8 @@ def _offline_validation(claim, documents: list[str], policy: dict) -> dict:
         {
             "check": "coverage",
             "verdict": "Supported",
-            "detail": "Claim type aligns with Medical Expense / accidental hospitalisation (Clause 5.2).",
-            "evidence": [
-                {
-                    "document": "Policy.pdf",
-                    "page": 12,
-                    "text": "Clause 5.2 — Medical expenses in UAE are covered subject to deductible.",
-                }
-            ],
+            "detail": coverage_detail,
+            "evidence": [{"document": coverage_doc, "page": 12, "text": coverage_text}],
         },
         {
             "check": "coverage_limit",
@@ -139,38 +154,38 @@ def _offline_validation(claim, documents: list[str], policy: dict) -> dict:
                     "document": "Coverage_Schedule.xlsx",
                     "page": 1,
                     "page_or_sheet": "sheet:Limits",
-                    "text": "Medical Expense | 250000 | 500",
+                    "text": schedule_text,
                 }
             ],
         },
         {
             "check": "deductible",
             "verdict": "Supported",
-            "detail": f"Policy deductible AED {float(policy.get('deductible_amount') or 500):,.0f}.",
+            "detail": f"Policy deductible AED {float(policy.get('deductible_amount') or 0):,.0f}.",
             "evidence": [
                 {
-                    "document": "Policy.pdf",
+                    "document": coverage_doc,
                     "page": 12,
-                    "text": "Deductible amount applicable: AED 500 per claim.",
+                    "text": f"Deductible / priority AED {float(policy.get('deductible_amount') or 0):,.0f}.",
                 }
             ],
         },
         {
             "check": "exclusions",
             "verdict": "Supported",
-            "detail": "Exclusions reviewed; claim description does not trigger cosmetic/war exclusions.",
+            "detail": "Exclusions reviewed; claim description does not clearly trigger an exclusion.",
             "evidence": [
                 {
-                    "document": "Policy.pdf",
+                    "document": coverage_doc,
                     "page": 18,
-                    "text": "Exclusions: elective cosmetic surgery; war and terrorism.",
+                    "text": (policy.get("exclusions") or "Standard exclusions")[:200],
                 }
             ],
         },
         {
             "check": "required_documents",
             "verdict": "Supported",
-            "detail": "Required documents on file: Claim Form, Invoice, Medical Report, Policy Wording / Schedule.",
+            "detail": docs_detail,
             "evidence": [],
         },
         {

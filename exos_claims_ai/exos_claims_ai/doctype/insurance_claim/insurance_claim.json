@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:CLM-.#####",
+ "autoname": "field:claim_number",
  "creation": "2026-07-08 00:00:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
