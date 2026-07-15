@@ -465,8 +465,11 @@ body[data-theme="dark"] .dropdown-menu {
   color: #eef3fb !important;
 }
 
-body[data-theme="dark"] .dropdown-item:hover,
-body[data-theme="dark"] .dropdown-item:focus {
-  background: rgba(79, 157, 255, 0.14) !important;
-  color: #8fd0ff !important;
+/* Hide residual ERPNext branding in chrome */
+.footer-powered,
+.powered-by,
+a[href*="erpnext.com"],
+.navbar .erpnext-logo {
+  display: none !important;
 }
+

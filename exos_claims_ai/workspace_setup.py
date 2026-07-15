@@ -51,6 +51,14 @@ WORKSPACE_CONTENT = [
 ]
 
 
+VISIBLE_DESKTOP_ICONS = {
+    "EXOS Claims AI",
+    "EXOS Claims",
+    "Framework",
+    "Accounting",
+}
+
+
 def ensure_workspace() -> None:
     """Recreate EXOS Claims workspace after site updates (slug must match /desk/exos-claims)."""
     if not frappe.db.exists("DocType", "Workspace"):
@@ -81,6 +89,7 @@ def ensure_workspace() -> None:
         frappe.get_doc(doc).insert(ignore_permissions=True)
 
     ensure_desktop_icon()
+    whitelabel_desktop_icons()
     frappe.db.commit()
 
 
@@ -102,7 +111,6 @@ def ensure_desktop_icon() -> None:
         filters={"app": "exos_claims_ai"},
         fields=["name", "link"],
     )
-    # Also catch icons created under older labels/names
     icons += frappe.get_all(
         "Desktop Icon",
         filters={"name": ["like", "%EXOS%"]},
@@ -124,3 +132,24 @@ def ensure_desktop_icon() -> None:
                 "logo_url",
                 "/assets/exos_claims_ai/images/exos-logo.png",
             )
+            frappe.db.set_value("Desktop Icon", row.name, "hidden", 0)
+
+
+def whitelabel_desktop_icons() -> None:
+    """Desk grid: EXOS Claims + Framework + Accounting only."""
+    if not frappe.db.exists("DocType", "Desktop Icon"):
+        return
+
+    icons = frappe.get_all(
+        "Desktop Icon",
+        fields=["name", "label", "app", "hidden", "parent_icon"],
+    )
+    for row in icons:
+        if row.parent_icon:
+            continue
+        keep = row.name in VISIBLE_DESKTOP_ICONS or (row.label or "") in VISIBLE_DESKTOP_ICONS
+        if row.app == "exos_claims_ai" or "exos" in (row.name or "").lower():
+            keep = True
+        if row.name in ("ERPNext", "ERPNext Settings", "Home"):
+            keep = False
+        frappe.db.set_value("Desktop Icon", row.name, "hidden", 0 if keep else 1)
