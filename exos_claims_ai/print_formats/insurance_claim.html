@@ -1,0 +1,125 @@
+<div class="exos-print">
+  <div class="exos-print-toprule"></div>
+
+  <div class="exos-print-header">
+    <div class="exos-print-brand">
+      <img class="exos-print-logo" src="/assets/exos_claims_ai/images/exos-logo.png" alt="EXOS" />
+      <div class="exos-print-brand-text">
+        <div class="eyebrow">Global Reinsurance Broker</div>
+        <div class="name">EXOS</div>
+        <div class="sub">Control. Consistency. Confidence.</div>
+      </div>
+    </div>
+    <div class="exos-print-meta">
+      <div class="doc-type">Official document</div>
+      <div class="doc-title">Insurance Claim</div>
+      <div class="doc-id">{{ doc.claim_number or doc.name }}</div>
+      <div class="meta-row">Ref · {{ doc.name }}</div>
+      <div class="meta-row">Printed · {{ frappe.utils.format_datetime(frappe.utils.now()) }}</div>
+      {% set st = (doc.status or 'Draft') %}
+      <span class="exos-print-badge {% if st == 'Approved' %}ok{% elif st == 'Rejected' %}bad{% elif 'Pending' in st or 'Validation' in st or 'Validated' in st %}warn{% endif %}">
+        {{ st }}
+      </span>
+    </div>
+  </div>
+
+  <div class="exos-print-kpis">
+    <div class="exos-print-kpi">
+      <span class="k-label">Claim amount</span>
+      <div class="k-value emphasize">{{ frappe.format(doc.claim_amount, {'fieldtype': 'Currency'}) }}</div>
+    </div>
+    <div class="exos-print-kpi">
+      <span class="k-label">Claim type</span>
+      <div class="k-value">{{ doc.claim_type or '—' }}</div>
+    </div>
+    <div class="exos-print-kpi">
+      <span class="k-label">Incident date</span>
+      <div class="k-value">{{ frappe.format(doc.incident_date, {'fieldtype': 'Date'}) }}</div>
+    </div>
+    <div class="exos-print-kpi">
+      <span class="k-label">Approval route</span>
+      <div class="k-value">{{ doc.approval_status or '—' }}</div>
+    </div>
+  </div>
+
+  <div class="exos-print-section" style="margin-top:16px;">
+    <div class="exos-print-section-head">Claim particulars</div>
+    <div class="exos-print-section-body">
+      <table class="exos-print-grid">
+        <tr>
+          <td>
+            <span class="exos-print-label">Claim number</span>
+            <div class="exos-print-value">{{ doc.claim_number }}</div>
+          </td>
+          <td>
+            <span class="exos-print-label">Linked policy</span>
+            <div class="exos-print-value">{{ doc.policy_number }}</div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <span class="exos-print-label">Cedant / claimant</span>
+            <div class="exos-print-value">{{ doc.claimant_name }}</div>
+          </td>
+          <td>
+            <span class="exos-print-label">Workflow status</span>
+            <div class="exos-print-value">{{ doc.status or '—' }}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="exos-print-section" style="margin-top:12px;">
+    <div class="exos-print-section-head">Narrative</div>
+    <div class="exos-print-box">{{ doc.claim_description or 'No claim narrative recorded.' }}</div>
+  </div>
+
+  {% if doc.ai_summary %}
+  <div class="exos-print-section" style="margin-top:12px;">
+    <div class="exos-print-section-head">AI assessment summary</div>
+    <div class="exos-print-box">{{ doc.ai_summary }}</div>
+  </div>
+  {% endif %}
+
+  <div class="exos-print-section" style="margin-top:12px;">
+    <div class="exos-print-section-head">Document checklist</div>
+    <table class="exos-print-table">
+      <thead>
+        <tr>
+          <th style="width:55%;">Document</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Claim form</td>
+          <td>{{ 'On file' if doc.claim_form else 'Outstanding' }}</td>
+        </tr>
+        <tr>
+          <td>Invoice</td>
+          <td>{{ 'On file' if doc.invoice else 'Outstanding' }}</td>
+        </tr>
+        <tr>
+          <td>Medical report</td>
+          <td>{{ 'On file' if doc.medical_report else 'Outstanding' }}</td>
+        </tr>
+        <tr>
+          <td>Supporting documents</td>
+          <td>{{ 'On file' if doc.supporting_documents else 'Outstanding' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="exos-print-sign">
+    <div class="line">Prepared by<span class="hint">Name / date</span></div>
+    <div class="line">Reviewed by<span class="hint">Claims officer</span></div>
+    <div class="line">Approved by<span class="hint">Authorised signatory</span></div>
+  </div>
+
+  <div class="exos-print-footer">
+    <div><strong>CONFIDENTIAL</strong> — Internal claims control use only</div>
+    <div>EXOS · Dubai reinsurance claims validation · {{ doc.claim_number or doc.name }}</div>
+  </div>
+</div>

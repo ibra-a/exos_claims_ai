@@ -1,0 +1,92 @@
+<div class="exos-print">
+  <div class="exos-print-toprule"></div>
+
+  <div class="exos-print-header">
+    <div class="exos-print-brand">
+      <img class="exos-print-logo" src="/assets/exos_claims_ai/images/exos-logo.png" alt="EXOS" />
+      <div class="exos-print-brand-text">
+        <div class="eyebrow">Global Reinsurance Broker</div>
+        <div class="name">EXOS</div>
+        <div class="sub">Control. Consistency. Confidence.</div>
+      </div>
+    </div>
+    <div class="exos-print-meta">
+      <div class="doc-type">Official document</div>
+      <div class="doc-title">AI Validation Report</div>
+      <div class="doc-id">{{ doc.name }}</div>
+      <div class="meta-row">Claim · {{ doc.claim_reference or '—' }}</div>
+      <div class="meta-row">Printed · {{ frappe.utils.format_datetime(frappe.utils.now()) }}</div>
+      {% set st = (doc.validation_status or 'REVIEW') %}
+      <span class="exos-print-badge {% if st == 'APPROVED' %}ok{% elif st == 'REJECTED' %}bad{% else %}warn{% endif %}">
+        {{ st }}
+      </span>
+    </div>
+  </div>
+
+  <div class="exos-print-kpis">
+    <div class="exos-print-kpi">
+      <span class="k-label">Decision</span>
+      <div class="k-value">{{ doc.validation_status or 'REVIEW' }}</div>
+    </div>
+    <div class="exos-print-kpi">
+      <span class="k-label">Confidence</span>
+      <div class="k-value emphasize">
+        {{ frappe.format(doc.confidence_score, {'fieldtype': 'Percent'}) if doc.confidence_score is not none else '—' }}
+      </div>
+    </div>
+    <div class="exos-print-kpi">
+      <span class="k-label">Coverage</span>
+      <div class="k-value">{{ 'Indicated' if doc.coverage_decision else 'Not indicated' }}</div>
+    </div>
+    <div class="exos-print-kpi">
+      <span class="k-label">Duplicate check</span>
+      <div class="k-value" style="font-size:10pt;">{{ doc.duplicate_detection_result or '—' }}</div>
+    </div>
+  </div>
+
+  <div class="exos-print-section" style="margin-top:16px;">
+    <div class="exos-print-section-head">Recommendation</div>
+    <div class="exos-print-box">{{ doc.ai_recommendation or 'No recommendation recorded.' }}</div>
+  </div>
+
+  <div class="exos-print-section" style="margin-top:12px;">
+    <div class="exos-print-section-head">Assessment summary</div>
+    <div class="exos-print-box">{{ doc.ai_summary or 'No AI summary recorded.' }}</div>
+  </div>
+
+  {% if doc.missing_documents %}
+  <div class="exos-print-section" style="margin-top:12px;">
+    <div class="exos-print-section-head">Outstanding documents</div>
+    <div class="exos-print-box">{{ doc.missing_documents }}</div>
+  </div>
+  {% endif %}
+
+  {% if doc.evidence_references %}
+  <div class="exos-print-section" style="margin-top:12px;">
+    <div class="exos-print-section-head">Evidence register</div>
+    <table class="exos-print-table">
+      <thead>
+        <tr>
+          <th style="width:28%;">Document</th>
+          <th style="width:10%;">Page</th>
+          <th>Extract</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in doc.evidence_references %}
+        <tr>
+          <td>{{ row.document_name or '—' }}</td>
+          <td>{{ row.page_no or '—' }}</td>
+          <td>{{ row.extracted_text or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <div class="exos-print-footer">
+    <div><strong>CONFIDENTIAL</strong> — AI-assisted; human approval still required</div>
+    <div>EXOS · Evidence-grounded validation · {{ doc.name }}</div>
+  </div>
+</div>

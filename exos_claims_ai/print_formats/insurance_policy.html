@@ -1,0 +1,93 @@
+<div class="exos-print">
+  <div class="exos-print-toprule"></div>
+
+  <div class="exos-print-header">
+    <div class="exos-print-brand">
+      <img class="exos-print-logo" src="/assets/exos_claims_ai/images/exos-logo.png" alt="EXOS" />
+      <div class="exos-print-brand-text">
+        <div class="eyebrow">Global Reinsurance Broker</div>
+        <div class="name">EXOS</div>
+        <div class="sub">Control. Consistency. Confidence.</div>
+      </div>
+    </div>
+    <div class="exos-print-meta">
+      <div class="doc-type">Official document</div>
+      <div class="doc-title">Insurance Policy</div>
+      <div class="doc-id">{{ doc.policy_number or doc.name }}</div>
+      <div class="meta-row">Ref · {{ doc.name }}</div>
+      <div class="meta-row">Printed · {{ frappe.utils.format_datetime(frappe.utils.now()) }}</div>
+      {% set st = (doc.status or 'Draft') %}
+      <span class="exos-print-badge {% if st == 'Active' %}ok{% elif st in ['Expired','Suspended'] %}bad{% else %}warn{% endif %}">
+        {{ st }}
+      </span>
+    </div>
+  </div>
+
+  <div class="exos-print-kpis">
+    <div class="exos-print-kpi">
+      <span class="k-label">Coverage limit</span>
+      <div class="k-value emphasize">{{ frappe.format(doc.coverage_limit, {'fieldtype': 'Currency'}) }}</div>
+    </div>
+    <div class="exos-print-kpi">
+      <span class="k-label">Deductible</span>
+      <div class="k-value">
+        {{ frappe.format(doc.deductible_amount, {'fieldtype': 'Currency'}) if doc.deductible_amount else '—' }}
+      </div>
+    </div>
+    <div class="exos-print-kpi">
+      <span class="k-label">Policy type</span>
+      <div class="k-value">{{ doc.policy_type or '—' }}</div>
+    </div>
+    <div class="exos-print-kpi">
+      <span class="k-label">Period</span>
+      <div class="k-value" style="font-size:10pt;">
+        {{ frappe.format(doc.start_date, {'fieldtype': 'Date'}) }}
+        –
+        {{ frappe.format(doc.end_date, {'fieldtype': 'Date'}) }}
+      </div>
+    </div>
+  </div>
+
+  <div class="exos-print-section" style="margin-top:16px;">
+    <div class="exos-print-section-head">Policy particulars</div>
+    <div class="exos-print-section-body">
+      <table class="exos-print-grid">
+        <tr>
+          <td>
+            <span class="exos-print-label">Policy number</span>
+            <div class="exos-print-value">{{ doc.policy_number }}</div>
+          </td>
+          <td>
+            <span class="exos-print-label">Cedant / customer</span>
+            <div class="exos-print-value">{{ doc.customer_name }}</div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <span class="exos-print-label">Status</span>
+            <div class="exos-print-value">{{ doc.status or '—' }}</div>
+          </td>
+          <td>
+            <span class="exos-print-label">Attached schedule</span>
+            <div class="exos-print-value">{{ 'On file' if doc.attached_policy_documents else 'Not attached' }}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="exos-print-section" style="margin-top:12px;">
+    <div class="exos-print-section-head">Coverage details</div>
+    <div class="exos-print-box">{{ doc.coverage_details or 'No coverage details recorded.' }}</div>
+  </div>
+
+  <div class="exos-print-section" style="margin-top:12px;">
+    <div class="exos-print-section-head">Exclusions</div>
+    <div class="exos-print-box">{{ doc.exclusions or 'No exclusions recorded.' }}</div>
+  </div>
+
+  <div class="exos-print-footer">
+    <div><strong>CONFIDENTIAL</strong> — Internal claims control use only</div>
+    <div>EXOS · Policy coverage record · {{ doc.policy_number or doc.name }}</div>
+  </div>
+</div>

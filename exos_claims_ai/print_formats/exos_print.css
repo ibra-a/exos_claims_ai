@@ -1,0 +1,348 @@
+/* EXOS enterprise print — restrained brokerage document style */
+
+.exos-print {
+  --navy: #001333;
+  --blue: #1a5fb4;
+  --muted: #5a6c8e;
+  --line: #c9d7e8;
+  --surface: #f5f8fc;
+  --text: #0a1426;
+
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: var(--text);
+  font-size: 10pt;
+  line-height: 1.4;
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.exos-print * {
+  box-sizing: border-box;
+}
+
+/* Top rule + brand bar */
+.exos-print-toprule {
+  height: 4px;
+  background: var(--navy);
+  margin: 0 0 16px;
+}
+
+.exos-print-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding-bottom: 14px;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.exos-print-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.exos-print-logo {
+  height: 44px;
+  width: auto;
+  max-width: 140px;
+  object-fit: contain;
+  display: block;
+}
+
+.exos-print-brand-text .eyebrow {
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 2px;
+}
+
+.exos-print-brand-text .name {
+  font-size: 16pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--navy);
+  line-height: 1.05;
+}
+
+.exos-print-brand-text .sub {
+  font-size: 8.5pt;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.exos-print-meta {
+  text-align: right;
+  min-width: 190px;
+}
+
+.exos-print-meta .doc-type {
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.exos-print-meta .doc-title {
+  font-size: 14pt;
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+
+.exos-print-meta .doc-id {
+  font-size: 9pt;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.exos-print-meta .meta-row {
+  font-size: 8pt;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Status chip — quiet, enterprise */
+.exos-print-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 2px 9px;
+  border-radius: 2px;
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--navy);
+}
+
+.exos-print-badge.ok {
+  border-color: #9fd4b5;
+  color: #0f6a42;
+  background: #f3faf6;
+}
+
+.exos-print-badge.warn {
+  border-color: #e0c58a;
+  color: #8a6500;
+  background: #fffbf2;
+}
+
+.exos-print-badge.bad {
+  border-color: #e2a8a8;
+  color: #8f1d1d;
+  background: #fdf5f5;
+}
+
+/* Key metrics strip */
+.exos-print-kpis {
+  display: flex;
+  width: 100%;
+  margin: 16px 0 4px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.exos-print-kpi {
+  flex: 1;
+  padding: 10px 12px;
+  border-right: 1px solid var(--line);
+}
+
+.exos-print-kpi:last-child {
+  border-right: none;
+}
+
+.exos-print-kpi .k-label {
+  display: block;
+  font-size: 7pt;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+
+.exos-print-kpi .k-value {
+  font-size: 12pt;
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: -0.01em;
+}
+
+.exos-print-kpi .k-value.emphasize {
+  font-size: 15pt;
+}
+
+/* Sections */
+.exos-print h2 {
+  font-size: 8pt;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 18px 0 8px;
+  padding: 0;
+  border: none;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.exos-print-section {
+  border: 1px solid var(--line);
+  margin-bottom: 2px;
+}
+
+.exos-print-section-head {
+  background: var(--navy);
+  color: #fff;
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+}
+
+.exos-print-section-body {
+  padding: 10px 12px 4px;
+}
+
+/* Field grid */
+.exos-print-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.exos-print-grid td {
+  vertical-align: top;
+  padding: 0 14px 12px 0;
+  width: 50%;
+}
+
+.exos-print-label {
+  display: block;
+  font-size: 7pt;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.exos-print-value {
+  font-size: 10pt;
+  font-weight: 600;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.exos-print-value.muted {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.exos-print-box {
+  border: 1px solid var(--line);
+  padding: 11px 12px;
+  background: #fff;
+  margin-top: 0;
+  white-space: pre-wrap;
+  font-size: 9.5pt;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.exos-print-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0;
+  font-size: 9pt;
+}
+
+.exos-print-table th {
+  text-align: left;
+  background: var(--surface);
+  color: var(--navy);
+  padding: 7px 10px;
+  font-weight: 700;
+  font-size: 7.5pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.exos-print-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  font-weight: 500;
+}
+
+.exos-print-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Signatures */
+.exos-print-sign {
+  margin-top: 28px;
+  display: flex;
+  gap: 28px;
+}
+
+.exos-print-sign .line {
+  flex: 1;
+  border-top: 1px solid var(--navy);
+  padding-top: 6px;
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.exos-print-sign .hint {
+  display: block;
+  margin-top: 18px;
+  font-size: 8pt;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #9aa8bc;
+}
+
+/* Footer */
+.exos-print-footer {
+  margin-top: 24px;
+  padding-top: 10px;
+  border-top: 2px solid var(--navy);
+  font-size: 7.5pt;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  letter-spacing: 0.02em;
+}
+
+.exos-print-footer strong {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+@media print {
+  .exos-print {
+    max-width: none;
+  }
+  .exos-print-kpis,
+  .exos-print-section-head,
+  .exos-print-table th {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
