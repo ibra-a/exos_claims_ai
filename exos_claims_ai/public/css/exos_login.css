@@ -1,39 +1,57 @@
-/* EXOS login portal — Frappe v16 uses body[data-path=login], NOT body.for-login.
-   Must beat login.bundle.css (loads after Website Theme). */
+/* EXOS login — loaded via web_include_css and Website Theme.
+   Must override login.bundle.css body { background-color: var(--bg-color) }. */
 
 html body[data-path="login"],
-html body[data-path="login"] .page-container,
-html body[data-path="login"] .main-section,
-html body[data-path="login"] .page-content-wrapper,
-html body[data-path="forgot"],
-html body[data-path="login"] .web-page-content {
-  background: #001333 !important;
+body[data-path="login"] {
   background-color: #001333 !important;
   background-image:
     radial-gradient(900px 520px at 50% 12%, rgba(95, 211, 154, 0.14), transparent 55%),
-    radial-gradient(700px 480px at 85% 90%, rgba(79, 157, 255, 0.14), transparent 50%),
     linear-gradient(180deg, #06122c, #001333) !important;
   min-height: 100vh !important;
   min-height: 100svh !important;
+}
+
+body[data-path="login"] .page-container,
+body[data-path="login"] .page-content-wrapper,
+body[data-path="login"] .main-section {
+  background: transparent !important;
 }
 
 body[data-path="login"] .web-footer {
   display: none !important;
 }
 
-/* White card on navy — like reference screenshot */
 body[data-path="login"] .for-login .page-card,
 body[data-path="login"] .for-forgot .page-card,
 body[data-path="login"] .for-signup .page-card,
 body[data-path="login"] .for-login-with-email-link .page-card,
 body[data-path="login"] .for-email-login .page-card {
-  background: #ffffff !important;
   background-color: #ffffff !important;
-  border: none !important;
   border-radius: 16px !important;
   box-shadow: 0 24px 64px rgba(0, 8, 24, 0.5) !important;
   max-width: 420px !important;
-  padding: 28px !important;
+}
+
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login,
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login:hover,
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login:focus,
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login:active {
+  background: #5fd39a !important;
+  background-color: #5fd39a !important;
+  color: #001333 !important;
+  border: none !important;
+  font-weight: 700 !important;
+}
+
+body[data-path="login"] .for-login .forgot-password-message a,
+body[data-path="login"] .for-login .sign-up-message a {
+  color: #3db87a !important;
+  font-weight: 600 !important;
+}
+
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login-option {
+  color: #3db87a !important;
+  background: #f1f4f8 !important;
 }
 
 body[data-path="login"] img.app-logo {
@@ -43,76 +61,20 @@ body[data-path="login"] img.app-logo {
   object-fit: contain !important;
 }
 
-body[data-path="login"] .page-card-head h4,
-body[data-path="login"] .page-card-head .title,
-body[data-path="login"] .for-login .page-card .page-card-head,
-body[data-path="login"] .for-login label,
-body[data-path="login"] .for-login .page-card-body {
-  color: #0a1426 !important;
-}
-
-body[data-path="login"] .for-login .form-control,
-body[data-path="login"] .for-login input[type="text"],
-body[data-path="login"] .for-login input[type="email"],
-body[data-path="login"] .for-login input[type="password"] {
-  background: #f1f4f8 !important;
-  border: 1px solid #e2e8f0 !important;
-  color: #0a1426 !important;
-  border-radius: 10px !important;
-}
-
-/* Mint Continue / Login CTA — beat gray-900 from login.bundle */
-body[data-path="login"] .for-login .page-card .page-card-actions .btn-login,
-body[data-path="login"] .for-login .page-card .page-card-actions .btn-primary,
-body[data-path="login"] .for-login .btn-login,
-body[data-path="login"] .for-login button.btn-primary,
-body[data-path="login"] .for-login .page-card-actions .btn-login:not(:disabled) {
-  background: #5fd39a !important;
-  background-color: #5fd39a !important;
-  border: none !important;
-  color: #001333 !important;
-  font-weight: 700 !important;
-  border-radius: 10px !important;
-}
-
-body[data-path="login"] .for-login .page-card .page-card-actions .btn-login:hover,
-body[data-path="login"] .for-login .page-card .page-card-actions .btn-login:focus,
-body[data-path="login"] .for-login .page-card .page-card-actions .btn-login:active {
-  background: #3db87a !important;
-  background-color: #3db87a !important;
-  color: #ffffff !important;
-}
-
-/* Forgot password + links in EXOS mint */
-body[data-path="login"] .for-login .forgot-password-message a,
-body[data-path="login"] .for-login a:not(.btn) {
-  color: #3db87a !important;
-  font-weight: 600 !important;
-}
-
-/* Secondary option buttons */
-body[data-path="login"] .for-login .page-card .page-card-actions .btn-login-option,
-body[data-path="login"] .for-login .page-card .page-card-actions .btn-signup {
-  background: #f1f4f8 !important;
-  color: #3db87a !important;
-  border: 1px solid #e2e8f0 !important;
-  font-weight: 600 !important;
-}
-
-/* Powered by Myndrex — fixed footer */
+/* Powered by Myndrex — login.bundle hides .web-footer, so paint our own */
 body[data-path="login"]::after {
   content: "Powered by Myndrex.ai";
   position: fixed;
   left: 0;
   right: 0;
   bottom: 22px;
-  z-index: 9999;
+  z-index: 99999;
   text-align: center;
-  pointer-events: none;
-  font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
-  font-size: 13px;
+  color: #5fd39a;
   font-weight: 600;
+  font-size: 13px;
   letter-spacing: 0.02em;
-  color: #5fd39a !important;
+  pointer-events: none;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
   text-shadow: 0 1px 14px rgba(0, 8, 24, 0.55);
 }

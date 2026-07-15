@@ -1,47 +1,81 @@
-/* Companion CSS for overridden /login (Portal Pages).
-   Primary paint lives in login.html <style> so Frappe Cloud serves it
-   without waiting on asset rebuild. This file mirrors those rules. */
+/* Companion CSS for overridden /login — Portal Pages docs */
+/* EXOS login — loaded via web_include_css and Website Theme.
+   Must override login.bundle.css body { background-color: var(--bg-color) }. */
 
-body {
+html body[data-path="login"],
+body[data-path="login"] {
   background-color: #001333 !important;
   background-image:
     radial-gradient(900px 520px at 50% 12%, rgba(95, 211, 154, 0.14), transparent 55%),
     linear-gradient(180deg, #06122c, #001333) !important;
+  min-height: 100vh !important;
+  min-height: 100svh !important;
 }
 
-body .web-footer {
+body[data-path="login"] .page-container,
+body[data-path="login"] .page-content-wrapper,
+body[data-path="login"] .main-section {
+  background: transparent !important;
+}
+
+body[data-path="login"] .web-footer {
   display: none !important;
 }
 
-.for-login .page-card,
-.for-forgot .page-card,
-.for-signup .page-card,
-.for-login-with-email-link .page-card {
+body[data-path="login"] .for-login .page-card,
+body[data-path="login"] .for-forgot .page-card,
+body[data-path="login"] .for-signup .page-card,
+body[data-path="login"] .for-login-with-email-link .page-card,
+body[data-path="login"] .for-email-login .page-card {
   background-color: #ffffff !important;
   border-radius: 16px !important;
   box-shadow: 0 24px 64px rgba(0, 8, 24, 0.5) !important;
+  max-width: 420px !important;
 }
 
-.for-login .page-card .page-card-actions .btn-login {
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login,
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login:hover,
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login:focus,
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login:active {
   background: #5fd39a !important;
+  background-color: #5fd39a !important;
   color: #001333 !important;
   border: none !important;
   font-weight: 700 !important;
 }
 
-.for-login .forgot-password-message a {
+body[data-path="login"] .for-login .forgot-password-message a,
+body[data-path="login"] .for-login .sign-up-message a {
   color: #3db87a !important;
   font-weight: 600 !important;
 }
 
-.exos-login-powered {
+body[data-path="login"] .for-login .page-card .page-card-actions .btn-login-option {
+  color: #3db87a !important;
+  background: #f1f4f8 !important;
+}
+
+body[data-path="login"] img.app-logo {
+  height: 48px !important;
+  width: auto !important;
+  max-width: 220px !important;
+  object-fit: contain !important;
+}
+
+/* Powered by Myndrex — login.bundle hides .web-footer, so paint our own */
+body[data-path="login"]::after {
+  content: "Powered by Myndrex.ai";
   position: fixed;
   left: 0;
   right: 0;
   bottom: 22px;
+  z-index: 99999;
   text-align: center;
   color: #5fd39a;
   font-weight: 600;
   font-size: 13px;
-  z-index: 50;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  text-shadow: 0 1px 14px rgba(0, 8, 24, 0.55);
 }
