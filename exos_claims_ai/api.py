@@ -259,6 +259,22 @@ def _offline_validation(claim, documents: list[str], policy: dict) -> dict:
     }
 
 
+def _not_mentioned(answer: Optional[str] = None) -> dict:
+    return {
+        "answer": answer
+        or (
+            "Not mentioned in the claim pack. I will not invent an answer — "
+            "please upload or point to the relevant document page."
+        ),
+        "confidence": 25,
+        "verdict": "Not mentioned",
+        "evidence": [],
+        "document_reference": "",
+        "page_number": 0,
+        "extracted_text": "",
+    }
+
+
 def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> dict:
     q = (question or "").lower()
     policy = policy or {}
@@ -272,6 +288,12 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
     is_treaty = "quota share" in details or "treaty" in details or "cession" in (
         (getattr(claim, "claim_description", None) or "") if claim else ""
     ).lower()
+
+    # Demo probe: invented clauses must never be fabricated
+    if "zx-999" in q or "zx999" in q or "invented" in q:
+        return _not_mentioned(
+            "Not mentioned — no clause ZX-999 (or equivalent) appears in the claim pack documents."
+        )
 
     if is_property:
         doc = "Fac_Slip_PROP_014.pdf"
@@ -323,6 +345,7 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
                 "page_number": 1,
                 "extracted_text": f"Property Damage AOL {lim:,.0f}",
             }
+        return _not_mentioned()
 
     if is_treaty:
         doc = "Treaty_Wording_QS_MED.pdf"
@@ -352,6 +375,18 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
                 "page_number": 1,
                 "extracted_text": "CES-2026-0612 ceded 5550",
             }
+        if "approv" in q or "finance" in q or "threshold" in q:
+            route = _approval_route(amount)
+            return {
+                "answer": f"Approval routing: Amount AED {amount:,.0f} — recommended route: {route}.",
+                "confidence": 95,
+                "verdict": "Supported",
+                "evidence": [],
+                "document_reference": "Approval Rule Configuration",
+                "page_number": 0,
+                "extracted_text": "",
+            }
+        return _not_mentioned()
 
     # Default medical / generic pack
     if "deductible" in q or "excess" in q:
@@ -403,7 +438,7 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
             "page_number": 2,
             "extracted_text": "Period of insurance: 01 January 2026 to 31 December 2026.",
         }
-    if "clause" in q:
+    if "5.2" in q or ("clause" in q and ("medical" in q or "supporting" in q)):
         return {
             "answer": "Supporting clause text: Clause 5.2 — Medical expenses in UAE are covered subject to deductible.",
             "confidence": 90,
@@ -430,18 +465,7 @@ def _offline_ask(question: str, claim=None, policy: Optional[dict] = None) -> di
             "page_number": 0,
             "extracted_text": "",
         }
-    return {
-        "answer": (
-            "Not mentioned in the claim pack. I will not invent an answer — "
-            "please upload or point to the relevant document page."
-        ),
-        "confidence": 25,
-        "verdict": "Not mentioned",
-        "evidence": [],
-        "document_reference": "",
-        "page_number": 0,
-        "extracted_text": "",
-    }
+    return _not_mentioned()
 
 
 @frappe.whitelist()
