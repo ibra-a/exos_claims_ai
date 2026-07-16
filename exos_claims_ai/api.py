@@ -4,6 +4,7 @@ from typing import Optional
 
 import requests
 import frappe
+from frappe import _
 
 
 def has_app_permission() -> bool:
@@ -1238,6 +1239,110 @@ def get_approval_recommendation(claim_name: str):
         "route": route,
         "dual_approval": amount >= 20000,
     }
+
+
+APPROVAL_THRESHOLD_AED = 20000.0
+
+
+def _user_has_role(*roles: str) -> bool:
+    user_roles = set(frappe.get_roles())
+    if "System Manager" in user_roles:
+        return True
+    return any(role in user_roles for role in roles)
+
+
+def _assert_user_has_role(*roles: str) -> None:
+    if not _user_has_role(*roles):
+        frappe.throw(_("You do not have permission for this action."), frappe.PermissionError)
+
+
+@frappe.whitelist()
+def apply_claim_workflow_action(claim_name: str, action: str):
+    """Role- and threshold-aware claim workflow transitions (server enforced)."""
+    claim = frappe.get_doc("Insurance Claim", claim_name)
+    amount = float(claim.claim_amount or 0)
+    status = (claim.status or "").strip()
+    action = (action or "").strip()
+
+    handlers = {
+        "send_for_approval": _workflow_send_for_approval,
+        "approve_claim": _workflow_approve_claim,
+        "send_to_finance": _workflow_send_to_finance,
+        "finance_approve": _workflow_finance_approve,
+        "reject_claim": _workflow_reject_claim,
+    }
+    handler = handlers.get(action)
+    if not handler:
+        frappe.throw(_("Unknown workflow action: {0}").format(action))
+
+    message = handler(claim, status, amount)
+    claim.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    return {
+        "ok": True,
+        "status": claim.status,
+        "approval_status": claim.approval_status,
+        "message": message,
+        "dual_approval": amount >= APPROVAL_THRESHOLD_AED,
+    }
+
+
+def _workflow_send_for_approval(claim, status: str, amount: float) -> str:
+    _assert_user_has_role("Claims Officer", "Claims Manager")
+    if status != "AI Validated":
+        frappe.throw(_("Claim must be AI Validated before sending for approval."))
+    claim.status = "Pending Approval"
+    return _("Sent for approval routing.")
+
+
+def _workflow_approve_claim(claim, status: str, amount: float) -> str:
+    _assert_user_has_role("Claims Manager")
+    if status != "Pending Approval":
+        frappe.throw(_("Claim is not pending manager approval."))
+    if amount >= APPROVAL_THRESHOLD_AED:
+        frappe.throw(
+            _("Claims at or above AED {0:,.0f} require Finance approval.").format(
+                APPROVAL_THRESHOLD_AED
+            )
+        )
+    claim.status = "Approved"
+    return _("Claim approved by Claims Manager.")
+
+
+def _workflow_send_to_finance(claim, status: str, amount: float) -> str:
+    _assert_user_has_role("Claims Manager")
+    if status != "Pending Approval":
+        frappe.throw(_("Claim is not pending manager approval."))
+    if amount < APPROVAL_THRESHOLD_AED:
+        frappe.throw(
+            _("Claims below AED {0:,.0f} are approved by Claims Manager only.").format(
+                APPROVAL_THRESHOLD_AED
+            )
+        )
+    claim.status = "Pending Finance Approval"
+    return _("Sent to Head of Finance for final approval.")
+
+
+def _workflow_finance_approve(claim, status: str, amount: float) -> str:
+    _assert_user_has_role("Finance Manager")
+    if status != "Pending Finance Approval":
+        frappe.throw(_("Claim is not pending finance approval."))
+    if amount < APPROVAL_THRESHOLD_AED:
+        frappe.throw(_("Finance approval is only required for large claims."))
+    claim.status = "Approved"
+    return _("Claim approved by Finance Manager.")
+
+
+def _workflow_reject_claim(claim, status: str, amount: float) -> str:
+    if status == "Pending Approval":
+        _assert_user_has_role("Claims Manager")
+    elif status == "Pending Finance Approval":
+        _assert_user_has_role("Finance Manager", "Claims Manager")
+    else:
+        frappe.throw(_("Claim cannot be rejected from status: {0}").format(status))
+    claim.status = "Rejected"
+    return _("Claim rejected.")
 
 
 def _notify_agent_invalidate(claim_number: Optional[str], claim_name: Optional[str], reason: str) -> None:

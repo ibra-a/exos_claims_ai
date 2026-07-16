@@ -42,88 +42,104 @@ frappe.ui.form.on("Insurance Claim", {
       open_claims_copilot(frm);
     }, __("EXOS AI"));
 
-    if (frm.doc.status === "AI Validated") {
+    const amount = flt(frm.doc.claim_amount);
+    const threshold = 20000;
+
+    if (
+      frm.doc.status === "AI Validated" &&
+      exos_has_role("Claims Officer", "Claims Manager")
+    ) {
       frm.add_custom_button(__("Send for Approval"), () => {
         frappe.confirm(__("Send this claim for approval routing?"), () => {
-          frappe.call({
-            method: "frappe.client.set_value",
-            args: {
-              doctype: "Insurance Claim",
-              name: frm.doc.name,
-              fieldname: "status",
-              value: "Pending Approval",
-            },
-            callback: () => frm.reload_doc(),
-          });
+          exos_apply_workflow(frm, "send_for_approval", __("Sent for approval"));
         });
       }, __("Workflow"));
     }
 
-    if (frm.doc.status === "Pending Approval") {
-      const amount = flt(frm.doc.claim_amount);
-      if (amount < 20000) {
+    if (frm.doc.status === "Pending Approval" && exos_has_role("Claims Manager")) {
+      if (amount < threshold) {
         frm.add_custom_button(__("Approve Claim"), () => {
-          frappe.call({
-            method: "frappe.client.set_value",
-            args: {
-              doctype: "Insurance Claim",
-              name: frm.doc.name,
-              fieldname: "status",
-              value: "Approved",
-            },
-            callback: () => {
-              frappe.show_alert(
-                { message: __("Claim approved (Claims Manager)"), indicator: "green" },
-                5
-              );
-              frm.reload_doc();
-            },
-          });
+          exos_apply_workflow(frm, "approve_claim", __("Claim approved (Claims Manager)"));
         }, __("Workflow")).addClass("btn-primary");
       } else {
         frm.add_custom_button(__("Send to Finance"), () => {
-          frappe.call({
-            method: "frappe.client.set_value",
-            args: {
-              doctype: "Insurance Claim",
-              name: frm.doc.name,
-              fieldname: "status",
-              value: "Pending Finance Approval",
-            },
-            callback: () => {
-              frappe.show_alert(
-                { message: __("Awaiting Head of Finance"), indicator: "orange" },
-                5
-              );
-              frm.reload_doc();
-            },
-          });
+          exos_apply_workflow(frm, "send_to_finance", __("Awaiting Head of Finance"));
         }, __("Workflow")).addClass("btn-primary");
       }
+      frm.add_custom_button(__("Reject Claim"), () => {
+        frappe.confirm(__("Reject this claim?"), () => {
+          exos_apply_workflow(frm, "reject_claim", __("Claim rejected"));
+        });
+      }, __("Workflow"));
     }
 
-    if (frm.doc.status === "Pending Finance Approval") {
+    if (
+      frm.doc.status === "Pending Finance Approval" &&
+      exos_has_role("Finance Manager")
+    ) {
       frm.add_custom_button(__("Finance Approve"), () => {
-        frappe.call({
-          method: "frappe.client.set_value",
-          args: {
-            doctype: "Insurance Claim",
-            name: frm.doc.name,
-            fieldname: "status",
-            value: "Approved",
-          },
-          callback: () => {
-            frappe.show_alert(
-              { message: __("Claim approved (Finance + Claims)"), indicator: "green" },
-              5
-            );
-            frm.reload_doc();
-          },
-        });
+        exos_apply_workflow(frm, "finance_approve", __("Claim approved (Finance + Claims)"));
       }, __("Workflow")).addClass("btn-primary");
+      frm.add_custom_button(__("Reject Claim"), () => {
+        frappe.confirm(__("Reject this claim?"), () => {
+          exos_apply_workflow(frm, "reject_claim", __("Claim rejected"));
+        });
+      }, __("Workflow"));
     }
   },
 });
+
+function exos_has_role(...roles) {
+  const userRoles = frappe.user_roles || [];
+  if (userRoles.includes("System Manager")) {
+    return true;
+  }
+  return roles.some((role) => userRoles.includes(role));
+}
+
+function exos_apply_workflow(frm, action, successMessage) {
+  const args = {
+    claim_name: frm.doc.name,
+    action,
+  };
+  const methods = [
+    "exos_claims_ai.api.apply_claim_workflow_action",
+    "apply_claim_workflow_action",
+  ];
+
+  function attempt(index) {
+    frappe.call({
+      method: methods[index],
+      args,
+      freeze: true,
+      freeze_message: __("Updating workflow..."),
+      callback(r) {
+        const msg = (r && r.message) || {};
+        frappe.show_alert(
+          {
+            message: msg.message || successMessage || __("Updated"),
+            indicator: "green",
+          },
+          6
+        );
+        frm.reload_doc();
+      },
+      error(err) {
+        if (index + 1 < methods.length) {
+          attempt(index + 1);
+          return;
+        }
+        frappe.msgprint({
+          title: __("Workflow failed"),
+          message: (err && err.message) || __("Could not update claim workflow."),
+          indicator: "red",
+        });
+      },
+    });
+  }
+
+  attempt(0);
+}
 
 function exos_esc(text) {
   if (frappe.utils && frappe.utils.escape_html) {
@@ -220,7 +236,6 @@ function open_claims_copilot(frm) {
 
   d.show();
 
-  // Build branded shell after show — Frappe v16 HTML field wrappers can strip/nest options oddly
   const $mount = d.fields_dict.copilot_shell.$wrapper.find(".exos-copilot-mount");
   const host = $mount.length ? $mount : d.fields_dict.copilot_shell.$wrapper;
   host.html(`
